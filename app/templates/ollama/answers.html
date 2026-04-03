@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}AI Expert Insights - VillageCrop{% endblock %}
+
+{% block content %}
+<div class="ollama-answers-page">
+    <h1 class="page-title" style="text-align: center; margin-bottom: 10px;">🤖 AI Expert Insights</h1>
+    <p class="page-subtitle" style="text-align: center; margin-bottom: 40px;">Ollama-generated answers about your plant disease diagnosis</p>
+
+    {% if prediction %}
+    <div class="prediction-summary">
+        <h3 style="color: var(--primary); margin-bottom: 15px;">📊 Diagnosis Summary</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <label>Disease:</label>
+                <span class="disease-name" style="color: #f87171;">{{ prediction.disease }}</span>
+            </div>
+            <div class="summary-item">
+                <label>Confidence:</label>
+                <span class="confidence-value">{{ "%.2f"|format(prediction.confidence * 100) if prediction.confidence else 'N/A' }}%</span>
+            </div>
+            <div class="summary-item">
+                <label>Image Quality:</label>
+                <span class="quality-value {% if prediction.is_blurry %}blurry{% else %}good{% endif %}" 
+                      style="color: {% if prediction.is_blurry %}#facc15{% else %}#22c55e{% endif %};">
+                    {% if prediction.is_blurry %}⚠️ Blurry{% else %}✓ Good{% endif %}
+                </span>
+            </div>
+            <div class="summary-item">
+                <label>AI Processed:</label>
+                <span class="processed-value" 
+                      style="color: {% if prediction.processed %}#22c55e{% else %}#facc15{% endif %};">
+                    {% if prediction.processed %}✓ Yes{% else %}⏳ Pending{% endif %}
+                </span>
+            </div>
+        </div>
+
+        {% if prediction.image_base64 %}
+        <div class="prediction-image">
+            <h4 style="color: var(--primary); margin-bottom: 10px;">📷 Uploaded Image</h4>
+            <img src="data:image/png;base64,{{ prediction.image_base64 }}" alt="Uploaded plant leaf">
+        </div>
+        {% endif %}
+
+        {% if prediction.recommendation %}
+        <div class="recommendation-card">
+            <h4 style="margin-bottom: 10px;">💡 Quick Recommendation</h4>
+            <p>{{ prediction.recommendation }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="actions-section">
+        <button id="generate-answers-btn" class="btn btn-primary" onclick="generateAnswers()">
+            🔄 Generate AI Answers
+        </button>
+        <button id="refresh-btn" class="btn btn-secondary" onclick="location.reload()">
+            🔄 Refresh Page
+        </button>
+    </div>
+
+    <div id="answers-section" class="answers-section">
+        <h2>💬 Expert Insights from Ollama</h2>
+
+        {% if prediction.ollama_responses and prediction.ollama_responses|length > 0 %}
+        <div class="responses-grid">
+            {% for response in prediction.ollama_responses %}
+            <div class="response-card">
+                <div class="response-header">
+                    <span class="prompt-number">{{ loop.index }}</span>
+                    <h4>{{ response.prompt }}</h4>
+                </div>
+                <div class="response-content">
+                    {{ response.response }}
+                </div>
+                {% if response.generated_at %}
+                <div class="response-timestamp">
+                    Generated: {{ response.generated_at }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-answers" id="no-answers">
+            <div class="info-icon">💡</div>
+            <p>No AI answers generated yet.</p>
+            <p>Click "Generate AI Answers" to get expert insights about this disease.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="loading-section" class="loading-section hidden">
+        <div class="spinner"></div>
+        <p>Generating AI responses...</p>
+        <p class="loading-subtext">This may take a minute as Ollama processes each question.</p>
+    </div>
+
+    {% else %}
+    <div class="no-prediction">
+        <div class="info-icon">📷</div>
+        <h2 style="color: var(--text); margin-bottom: 15px;">No Predictions Found</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">You haven't uploaded any images for analysis yet.</p>
+        <a href="{{ url_for('predictions.upload_page') }}" class="btn btn-primary">
+            🔍 Upload an Image
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function generateAnswers() {
+    const btn = document.getElementById('generate-answers-btn');
+    const loadingSection = document.getElementById('loading-section');
+    const answersSection = document.getElementById('answers-section');
+    const noAnswers = document.getElementById('no-answers');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+    loadingSection.classList.remove('hidden');
+    if (noAnswers) noAnswers.style.display = 'none';
+    answersSection.style.opacity = '0.5';
+
+    try {
+        // Use the correct backend endpoint
+        const response = await fetch('/ollama/api/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Reload page to show new answers
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error generating answers: ' + (result.error || 'Unknown error'));
+            resetUI();
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+        resetUI();
+    }
+
+    function resetUI() {
+        btn.disabled = false;
+        btn.textContent = '🔄 Generate AI Answers';
+        loadingSection.classList.add('hidden');
+        answersSection.style.opacity = '1';
+        if (noAnswers) noAnswers.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

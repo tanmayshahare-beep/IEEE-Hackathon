@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgroDoc-AI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/agri-ai-replica.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                🌾 AgroDoc-AI
+            </a>
+            <div class="nav-links">
+                {% if session.user_id %}
+                    <a href="{{ url_for('dashboard.index') }}" class="nav-link" data-translate="dashboard">Dashboard</a>
+                    <a href="{{ url_for('predictions.upload_page') }}" class="nav-link" data-translate="disease_detection">Disease Detection</a>
+                    <a href="{{ url_for('predictions.history') }}" class="nav-link" data-translate="my_predictions">My Predictions</a>
+                    <a href="{{ url_for('farm.view_farm_map') }}" class="nav-link">🗺️ Farm Map</a>
+                    <a href="{{ url_for('farm.boundaries') }}" class="nav-link" data-translate="farm_boundaries">Farm Boundaries</a>
+                    
+                    <!-- Theme Toggle -->
+                    <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+                        <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+                        <span class="theme-toggle-label" id="theme-label">Dark</span>
+                    </button>
+                    
+                    <span class="nav-user">👤 {{ session.username }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link nav-logout" data-translate="logout">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="nav-link" data-translate="login">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="nav-link nav-register" data-translate="register">Register</a>
+                    <button type="button" class="nav-link language-btn" onclick="openLanguageModal()" title="Change Language">
+                        🌐 <span id="current-lang">EN</span>
+                    </button>
+                    
+                    <!-- Theme Toggle (not logged in) -->
+                    <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+                        <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+                        <span class="theme-toggle-label" id="theme-label">Dark</span>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 AgroDoc-AI. AI-Powered Plant Disease Detection System.</p>
+        </div>
+    </footer>
+
+    <!-- Language Selector Modal -->
+    <div id="language-modal" class="language-modal">
+        <div class="language-modal-content">
+            <div class="language-modal-header">
+                <h2 data-translate="language_selector_title">🌐 Select Language</h2>
+                <button class="language-close" onclick="closeLanguageModal()">&times;</button>
+            </div>
+            <p class="language-modal-desc" data-translate="language_selector_desc">Choose your preferred language</p>
+            
+            <div class="language-options">
+                <button class="language-option" onclick="setLanguage('en')" data-lang="en">
+                    <span class="lang-flag">🇬🇧</span>
+                    <span class="lang-name" data-translate="english">English</span>
+                </button>
+                <button class="language-option" onclick="setLanguage('hi')" data-lang="hi">
+                    <span class="lang-flag">🇮🇳</span>
+                    <span class="lang-name" data-translate="hindi">हिंदी (Hindi)</span>
+                </button>
+                <button class="language-option" onclick="setLanguage('kn')" data-lang="kn">
+                    <span class="lang-flag">🇮🇳</span>
+                    <span class="lang-name" data-translate="kannada">ಕನ್ನಡ (Kannada)</span>
+                </button>
+            </div>
+            
+            <div class="language-modal-footer">
+                <button class="btn btn-secondary" onclick="closeLanguageModal()" data-translate="close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get saved theme from localStorage or default to 'dark'
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        });
+        
+        // Toggle between light and dark theme
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+        
+        // Set theme
+        function setTheme(theme) {
+            // Set data attribute on html element
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            // Save to localStorage
+            localStorage.setItem('theme', theme);
+            
+            // Update toggle button icons and labels
+            updateThemeToggle(theme);
+        }
+        
+        // Update toggle button appearance
+        function updateThemeToggle(theme) {
+            const themeIcons = document.querySelectorAll('#theme-icon');
+            const themeLabels = document.querySelectorAll('#theme-label');
+            
+            themeIcons.forEach(icon => {
+                icon.textContent = theme === 'light' ? '☀️' : '🌙';
+            });
+            
+            themeLabels.forEach(label => {
+                label.textContent = theme === 'light' ? 'Light' : 'Dark';
+            });
+        }
+    </script>
+</body>
+</html>

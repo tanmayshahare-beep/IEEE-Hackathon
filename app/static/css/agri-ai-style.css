@@ -1,0 +1,832 @@
+/* ==========================================================================
+   Agri-AI Premium Dark Theme with Gold Accents
+   Backend connections remain unchanged - only visual styling updated
+   ========================================================================== */
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Primary Colors - Gold/Yellow accents */
+    --primary: #eab308;
+    --primary-light: #facc15;
+    --primary-dark: #ca8a04;
+    --primary-glow: rgba(234, 179, 8, 0.3);
+    
+    /* Background - Dark gradient */
+    --bg-dark: #1c1917;
+    --bg-card: rgba(41, 37, 36, 0.9);
+    --bg-input: #292524;
+    
+    /* Text Colors */
+    --text: #f5f5f4;
+    --text-muted: #a8a29e;
+    --text-secondary: #d6d3d1;
+    
+    /* Status Colors */
+    --success: #22c55e;
+    --warning: #facc15;
+    --danger: #ef4444;
+    --info: #3b82f6;
+    
+    /* Borders */
+    --border: rgba(234, 179, 8, 0.2);
+    --border-light: rgba(234, 179, 8, 0.1);
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 0 40px rgba(234, 179, 8, 0.15);
+    --shadow-glow: 0 0 25px rgba(234, 179, 8, 0.6);
+    
+    /* Typography */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, Consolas, monospace;
+}
+
+body {
+    font-family: var(--font-sans);
+    background: radial-gradient(circle at top, #292524, #1c1917);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Animated background texture */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23eab308" fill-opacity="0.03"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>');
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==========================================================================
+   Navbar - Premium Dark with Gold Accents
+   ========================================================================== */
+.navbar {
+    background: rgba(28, 25, 23, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+    text-shadow: 0 0 20px var(--primary-glow);
+    transition: transform 0.3s ease;
+}
+
+.nav-brand:hover {
+    transform: scale(1.05);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--primary);
+    background: var(--border-light);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+.nav-user {
+    color: var(--primary);
+    font-weight: 600;
+    padding: 8px 16px;
+    background: var(--border-light);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.nav-logout {
+    color: var(--danger);
+}
+
+.nav-logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.nav-register {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #1c1917 !important;
+    font-weight: 600;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.nav-register:hover {
+    box-shadow: 0 0 25px rgba(234, 179, 8, 0.5);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   Main Content
+   ========================================================================== */
+.main-content {
+    flex: 1;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   Alerts / Flash Messages
+   ========================================================================== */
+.alert {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    animation: slideIn 0.4s ease;
+    border: 1px solid;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.alert-warning {
+    background: rgba(250, 204, 21, 0.15);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+.alert-info {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--info);
+    color: var(--info);
+}
+
+/* ==========================================================================
+   Cards - Glassmorphism with Gold Accents
+   ========================================================================== */
+.card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 50px rgba(234, 179, 8, 0.2);
+    border-color: var(--primary);
+}
+
+/* ==========================================================================
+   Stats Grid (Dashboard)
+   ========================================================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--border-light);
+    border-radius: 12px;
+}
+
+.stat-info h3 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.stat-info p {
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.stat-success .stat-icon {
+    background: rgba(34, 197, 94, 0.2);
+}
+
+.stat-warning .stat-icon {
+    background: rgba(250, 204, 21, 0.2);
+}
+
+/* ==========================================================================
+   Actions Grid (Dashboard)
+   ========================================================================== */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.action-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-card h3 {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+}
+
+.action-card p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #1c1917;
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 35px rgba(234, 179, 8, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: var(--bg-input);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary);
+    background: var(--border-light);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ==========================================================================
+   Page Titles
+   ========================================================================== */
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    font-size: 1.1rem;
+}
+
+/* ==========================================================================
+   Upload Section (Disease Detection)
+   ========================================================================== */
+.upload-section {
+    max-width: 600px;
+    margin: 0 auto 40px;
+}
+
+.upload-area {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover,
+.upload-area.dragover {
+    border-color: var(--primary);
+    background: var(--border-light);
+    box-shadow: var(--shadow-lg);
+}
+
+.upload-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.upload-area h3 {
+    color: var(--text);
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+.upload-area p {
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Result Section
+   ========================================================================== */
+.result-section {
+    max-width: 800px;
+    margin: 0 auto 40px;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.result-image {
+    background: var(--bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.result-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-light);
+}
+
+.result-card h4 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.disease-name {
+    color: var(--primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.confidence {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.recommendation {
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+/* ==========================================================================
+   Confidence Meter
+   ========================================================================== */
+.confidence-meter {
+    background: var(--bg-input);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.confidence-bar {
+    padding: 8px 12px;
+    text-align: right;
+    font-weight: 600;
+    transition: width 0.5s ease-in-out;
+}
+
+.confidence-high {
+    background: var(--success);
+    color: #fff;
+}
+
+.confidence-medium {
+    background: var(--warning);
+    color: #1c1917;
+}
+
+.confidence-low {
+    background: var(--danger);
+    color: #fff;
+}
+
+/* ==========================================================================
+   Supported Plants Section
+   ========================================================================== */
+.supported-plants {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.supported-plants h3 {
+    text-align: center;
+    color: var(--text);
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+}
+
+.plants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.plant-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.plant-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.plant-card h4 {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+}
+
+.plant-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.plant-card li {
+    color: var(--text-muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.plant-card li:last-child {
+    border-bottom: none;
+}
+
+/* ==========================================================================
+   Farm Info Section
+   ========================================================================== */
+.farm-info {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    margin-top: 40px;
+}
+
+.farm-info h2 {
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.farm-details {
+    margin-bottom: 20px;
+}
+
+.farm-details p {
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.map-container {
+    height: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.footer {
+    background: rgba(28, 25, 23, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.footer p {
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Auth Pages (Login/Register)
+   ========================================================================== */
+.auth-container {
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.auth-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-card h2 {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Hidden Utility
+   ========================================================================== */
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.8rem;
+    }
+    
+    .nav-links {
+        gap: 12px;
+    }
+    
+    .nav-link {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+    
+    .stats-grid,
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .upload-area {
+        padding: 30px 20px;
+    }
+    
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Loading Animation
+   ========================================================================== */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Scrollbar Styling
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}

@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AgroDoc-AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+    .dashboard-map-section {
+        margin-top: 40px;
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05));
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 0 30px rgba(234, 179, 8, 0.15);
+        transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dashboard-map-section h2 {
+        color: var(--primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .map-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    #dashboard-map {
+        height: 500px;
+        width: 100%;
+        border-radius: 8px;
+        margin-top: 15px;
+        border: 2px solid var(--border);
+        background: var(--bg-card);
+        box-shadow: var(--shadow);
+    }
+
+    .crop-stats-inline {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .crop-stat-card {
+        background: var(--bg-hover);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .crop-stat-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .crop-stat-icon {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+
+    .crop-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .crop-stat-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    .crop-stat-card.healthy .crop-stat-value {
+        color: #22c55e;
+    }
+
+    .crop-stat-card.diseased .crop-stat-value {
+        color: #ef4444;
+    }
+
+    .no-predictions {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+    }
+
+    .no-predictions-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Welcome -->
+    <h2 class="dashboard-welcome" data-translate="welcome_user" data-var-username="{{ user.username }}">
+        Welcome, {{ user.username }}!
+    </h2>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon default">👤</div>
+            <div class="stat-info">
+                <h3 data-translate="account_status">Account Status</h3>
+                <p data-translate="active">Active</p>
+            </div>
+        </div>
+
+        <div class="stat-card {% if has_farm_boundaries %}stat-success{% else %}stat-warning{% endif %}">
+            <div class="stat-icon {% if has_farm_boundaries %}success{% else %}default{% endif %}">
+                {% if has_farm_boundaries %}✅{% else %}⚠️{% endif %}
+            </div>
+            <div class="stat-info">
+                <h3 data-translate="farm_boundaries_status">Farm Boundaries</h3>
+                <p>{% if has_farm_boundaries %}<span data-translate="registered">Registered</span>{% else %}<span data-translate="not_set">Not Set</span>{% endif %}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon info">🔬</div>
+            <div class="stat-info">
+                <h3 data-translate="disease_detection_title">Disease Detection</h3>
+                <p data-translate="disease_detection_ready">Ready</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="actions-grid">
+        <div class="action-card" onclick="window.location.href='{{ url_for('predictions.upload_page') }}'">
+            <h3 data-translate="disease_detection">🌿 Disease Detection</h3>
+            <p data-translate="disease_detection_desc">Upload plant leaf images to detect diseases using our AI model. Includes integrated AI chatbot for expert advice.</p>
+            <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('predictions.upload_page') }}'" data-translate="start_detection">
+                Start Detection
+            </button>
+        </div>
+
+        <div class="action-card" onclick="window.location.href='{{ url_for('predictions.history') }}'">
+            <h3 data-translate="my_predictions">📋 My Predictions</h3>
+            <p data-translate="prediction_history_desc">View your past disease detection results and analysis history.</p>
+            <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('predictions.history') }}'" data-translate="view_history">
+                View History
+            </button>
+        </div>
+
+        <div class="action-card" onclick="window.location.href='{{ url_for('farm.view_farm_map') }}'">
+            <h3 data-translate="farm_map">🗺️ Farm Map</h3>
+            <p data-translate="farm_map_desc">View your complete farm map with all crop locations and health status.</p>
+            <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('farm.view_farm_map') }}'" data-translate="view_full_map">
+                View Full Map
+            </button>
+        </div>
+    </div>
+
+    <!-- Farm Map Section -->
+    <div class="dashboard-map-section">
+        <div class="map-header">
+            <h2 data-translate="your_farm_overview">🗺️ Your Farm Overview</h2>
+            <div class="map-actions">
+                <a href="{{ url_for('farm.boundaries') }}" class="btn btn-secondary">
+                    {% if has_farm_boundaries %}<span data-translate="edit_boundaries">📝 Edit Boundaries</span>{% else %}<span data-translate="add_boundaries">➕ Add Boundaries</span>{% endif %}
+                </a>
+                <a href="{{ url_for('farm.view_farm_map') }}" class="btn btn-primary" data-translate="fullscreen_map">
+                    🔍 Full Screen Map
+                </a>
+            </div>
+        </div>
+
+        {% if crop_stats.total_predictions > 0 %}
+            <!-- Crop Statistics -->
+            <div class="crop-stats-inline">
+                <div class="crop-stat-card">
+                    <div class="crop-stat-icon">📊</div>
+                    <div class="crop-stat-value">{{ crop_stats.total_predictions }}</div>
+                    <div class="crop-stat-label" data-translate="total_scans">Total Scans</div>
+                </div>
+                <div class="crop-stat-card healthy">
+                    <div class="crop-stat-icon">✓</div>
+                    <div class="crop-stat-value">{{ crop_stats.healthy_count }}</div>
+                    <div class="crop-stat-label" data-translate="healthy">Healthy</div>
+                </div>
+                <div class="crop-stat-card diseased">
+                    <div class="crop-stat-icon">⚠</div>
+                    <div class="crop-stat-value">{{ crop_stats.diseased_count }}</div>
+                    <div class="crop-stat-label" data-translate="diseased">Diseased</div>
+                </div>
+                <div class="crop-stat-card">
+                    <div class="crop-stat-icon">🌱</div>
+                    <div class="crop-stat-value">{{ crop_stats.crops|length }}</div>
+                    <div class="crop-stat-label" data-translate="crop_types">Crop Types</div>
+                </div>
+            </div>
+
+            <!-- Crop Breakdown -->
+            {% if crop_stats.crops %}
+            <div class="crop-stats-inline" style="margin-bottom: 15px;">
+                {% for crop_name, stats in crop_stats.crops.items() %}
+                <div class="crop-stat-card">
+                    <div class="crop-stat-icon">
+                        {% if crop_name == 'Apple' %}🍎
+                        {% elif crop_name == 'Grape' %}🍇
+                        {% elif crop_name == 'Tomato' %}🍅
+                        {% else %}🌿
+                        {% endif %}
+                    </div>
+                    <div class="crop-stat-value">{{ stats.total }}</div>
+                    <div class="crop-stat-label">{{ crop_name }}</div>
+                    <div style="font-size: 0.75rem; margin-top: 5px;">
+                        <span style="color: #22c55e;" data-translate="healthy">✓ {{ stats.healthy }}</span> |
+                        <span style="color: #ef4444;" data-translate="diseased">⚠ {{ stats.diseased }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Map -->
+            <div id="dashboard-map"></div>
+
+            <p style="text-align: center; color: var(--text-muted); margin-top: 15px; font-size: 0.9rem;">
+                <span data-translate="markers_info">📍 Markers show crop locations • Green = Healthy • Red = Diseased</span><br>
+                <span data-translate="click_markers">Click markers for details • Click "Full Screen Map" for detailed view</span>
+            </p>
+        {% else %}
+            <div class="no-predictions">
+                <div class="no-predictions-icon">🌾</div>
+                <h3 data-translate="no_crop_data">No Crop Data Yet</h3>
+                <p data-translate="no_crop_data_desc">Upload your first plant image to see it on the map</p>
+                <a href="{{ url_for('predictions.upload_page') }}" class="btn btn-primary" style="margin-top: 15px;" data-translate="start_disease_detection">
+                    🌿 Start Disease Detection
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Initialize dashboard map with crop markers
+    const cropMarkers = {{ crop_markers | tojson }};
+    const farmBoundaries = {{ farm_boundaries | tojson if farm_boundaries else 'null' }};
+
+    if (cropMarkers.length > 0 || farmBoundaries) {
+        // Calculate center point
+        let centerLat = 20.5937;
+        let centerLng = 78.9629;
+        let zoom = 5;
+
+        if (farmBoundaries && farmBoundaries.features && farmBoundaries.features.length > 0) {
+            // Use boundary center
+            const coords = farmBoundaries.features[0].geometry.coordinates[0];
+            const lats = coords.map(c => c[1]);
+            const lngs = coords.map(c => c[0]);
+            centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+            centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+            zoom = 12;
+        } else if (cropMarkers.length > 0) {
+            // Use first marker location
+            centerLat = cropMarkers[0].lat;
+            centerLng = cropMarkers[0].lng;
+            zoom = 10;
+        }
+
+        const map = L.map('dashboard-map').setView([centerLat, centerLng], zoom);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add farm boundaries
+        if (farmBoundaries && farmBoundaries.features && farmBoundaries.features.length > 0) {
+            L.geoJSON(farmBoundaries, {
+                style: {
+                    color: '#eab308',
+                    weight: 3,
+                    fillOpacity: 0.1
+                }
+            }).addTo(map);
+        }
+
+        // Add crop markers
+        cropMarkers.forEach((crop, index) => {
+            const markerType = crop.is_healthy ? 'healthy' : 'diseased';
+            const cropIcon = crop.crop_type === 'Apple' ? '🍎' :
+                            crop.crop_type === 'Grape' ? '🍇' : '🍅';
+
+            const customIcon = L.divIcon({
+                className: 'custom-marker-wrapper',
+                html: `<div style="background: white; border: 3px solid ${markerType === 'healthy' ? '#22c55e' : '#ef4444'}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${cropIcon}</div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const marker = L.marker([crop.lat, crop.lng], { icon: customIcon }).addTo(map);
+
+            const popupContent = `
+                <div style="font-weight: 600; color: #eab308; margin-bottom: 8px;">${cropIcon} ${crop.crop_type || 'Crop'}</div>
+                <div style="margin: 5px 0;">
+                    <div style="color: #9ca3af; font-size: 12px;" data-translate="health_status">Health Status</div>
+                    <div style="color: ${crop.is_healthy ? '#22c55e' : '#ef4444'}; font-weight: 500;">
+                        ${crop.is_healthy ? '✓ Healthy' : '⚠ ' + crop.disease.replace(/___/g, ' - ')}
+                    </div>
+                </div>
+                <div style="margin: 5px 0;">
+                    <div style="color: #9ca3af; font-size: 12px;" data-translate="confidence">Confidence</div>
+                    <div style="font-weight: 500;">${(crop.confidence * 100).toFixed(1)}%</div>
+                </div>
+                <div style="margin: 5px 0;">
+                    <div style="color: #9ca3af; font-size: 12px;" data-translate="date">Date</div>
+                    <div style="font-weight: 500;">${new Date(crop.timestamp).toLocaleDateString()}</div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(234, 179, 8, 0.2);">
+                    <a href="/predictions/${crop.prediction_id}" style="background: linear-gradient(135deg, #eab308, #facc15); color: #1c1917; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-block;" data-translate="view_details">View Details</a>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+        });
+
+        // Fit map to show all markers and boundaries
+        const layers = [];
+        if (farmBoundaries && farmBoundaries.features && farmBoundaries.features.length > 0) {
+            layers.push(L.geoJSON(farmBoundaries));
+        }
+        cropMarkers.forEach(m => {
+            layers.push(L.marker([m.lat, m.lng]));
+        });
+
+        if (layers.length > 0) {
+            const group = new L.FeatureGroup(layers);
+            map.fitBounds(group.getBounds(), { padding: [50, 50] });
+        }
+    }
+</script>
+{% endblock %}

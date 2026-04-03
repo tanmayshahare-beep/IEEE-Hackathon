@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP - Login{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 data-translate="otp_login_title">📬 Enter OTP Code</h2>
+        <p data-translate="otp_login_desc">We've sent a 6-digit verification code to</p>
+        <p class="email-display"><strong>{{ email }}</strong></p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="auth-message auth-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.verify_otp_login') }}" class="auth-form">
+            <div class="form-group">
+                <label for="otp" data-translate="enter_otp">Enter Verification Code</label>
+                <input type="text"
+                       class="form-input otp-input"
+                       id="otp"
+                       name="otp"
+                       required
+                       maxlength="6"
+                       pattern="[0-9]{6}"
+                       placeholder="000000"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+                <p class="otp-hint" data-translate="enter_otp">Enter the 6-digit code from your email</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="verify-btn" data-translate="verify_login_btn">
+                ✓ Verify & Login
+            </button>
+        </form>
+
+        <div class="otp-resend">
+            <p>Didn't receive the code?</p>
+            <button class="btn btn-link" id="resend-btn" onclick="resendOTP()" data-translate="resend_otp_btn">
+                📤 Resend Code
+            </button>
+            <p class="resend-timer" id="resend-timer" style="display: none;" data-translate="resend_wait">
+                Resend available in <span id="countdown">60</span>s
+            </p>
+        </div>
+
+        <p class="auth-footer">
+            <a href="{{ url_for('auth.login') }}">← Back to Login</a>
+        </p>
+    </div>
+</div>
+
+<style>
+.otp-input {
+    font-size: 24px;
+    letter-spacing: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.email-display {
+    background: rgba(234, 179, 8, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    margin: 15px 0;
+    color: #fbbf24;
+}
+
+.otp-hint {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 5px;
+}
+
+.auth-message {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.auth-success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+}
+
+.auth-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.auth-info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #3b82f6;
+}
+
+.otp-resend {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+}
+
+.otp-resend p {
+    margin: 0 0 10px 0;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.resend-timer {
+    margin-top: 10px;
+    color: #fbbf24;
+    font-weight: 500;
+}
+
+#resend-btn {
+    color: #eab308;
+    text-decoration: none;
+    background: none;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#resend-btn:hover {
+    background: rgba(234, 179, 8, 0.1);
+    border-color: #eab308;
+}
+
+#resend-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s;
+}
+</style>
+
+<script>
+    // Auto-focus OTP input
+    document.getElementById('otp').focus();
+
+    // Auto-submit when 6 digits entered
+    document.getElementById('otp').addEventListener('input', function(e) {
+        // Only allow digits
+        this.value = this.value.replace(/[^0-9]/g, '');
+
+        if (this.value.length === 6) {
+            // Auto-submit after short delay
+            setTimeout(() => {
+                this.closest('form').submit();
+            }, 300);
+        }
+    });
+
+    // Resend OTP functionality
+    let resendCooldown = false;
+
+    async function resendOTP() {
+        if (resendCooldown) return;
+
+        const btn = document.getElementById('resend-btn');
+        const timer = document.getElementById('resend-timer');
+        const countdown = document.getElementById('countdown');
+
+        try {
+            const response = await fetch('/auth/resend-otp-login', {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show success message
+                showFlashMessage('✓ Verification code resent! Check your email.', 'success');
+
+                // Start cooldown
+                startCooldown();
+            } else {
+                showFlashMessage('⚠️ ' + data.error, 'danger');
+            }
+        } catch (err) {
+            showFlashMessage('⚠️ Failed to resend. Please try again.', 'danger');
+            console.error(err);
+        }
+    }
+
+    function startCooldown() {
+        resendCooldown = true;
+        const btn = document.getElementById('resend-btn');
+        const timer = document.getElementById('resend-timer');
+        const countdown = document.getElementById('countdown');
+
+        btn.disabled = true;
+        timer.style.display = 'block';
+
+        let seconds = 60;
+        countdown.textContent = seconds;
+
+        const interval = setInterval(() => {
+            seconds--;
+            countdown.textContent = seconds;
+
+            if (seconds <= 0) {
+                clearInterval(interval);
+                resendCooldown = false;
+                btn.disabled = false;
+                timer.style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    function showFlashMessage(message, type) {
+        // Remove existing messages
+        const existing = document.querySelectorAll('.auth-message');
+        existing.forEach(el => el.remove());
+
+        // Create new message
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `auth-message auth-${type}`;
+        msgDiv.textContent = message;
+
+        // Insert after form title
+        const form = document.querySelector('.auth-form');
+        form.parentNode.insertBefore(msgDiv, form);
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            msgDiv.style.opacity = '0';
+            msgDiv.style.transition = 'opacity 0.3s';
+            setTimeout(() => msgDiv.remove(), 300);
+        }, 5000);
+    }
+
+    // Show error animation for invalid OTP
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'danger' %}
+                    document.querySelector('.otp-input').classList.add('shake');
+                    setTimeout(() => {
+                        document.querySelector('.otp-input').classList.remove('shake');
+                    }, 500);
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</script>
+{% endblock %}

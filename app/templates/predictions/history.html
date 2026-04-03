@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}My Predictions - AgroDoc-AI{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <h1 class="page-title" style="text-align: center; margin-bottom: 10px;">📋 My Prediction History</h1>
+    <p class="page-subtitle" style="text-align: center; margin-bottom: 40px;">View all your plant disease analysis results</p>
+
+    {% if predictions and predictions|length > 0 %}
+    <div class="predictions-list">
+        {% for prediction in predictions %}
+        <div class="prediction-card" data-prediction-id="{{ prediction._id }}">
+            <div class="prediction-header">
+                <div class="prediction-info">
+                    <h3 class="disease-name" style="color: #f87171; font-size: 1.4em; margin: 0 0 10px 0;">
+                        {{ prediction.disease }}
+                    </h3>
+                    <div class="prediction-meta">
+                        <span class="timestamp">📅 {{ prediction.timestamp.strftime('%Y-%m-%d %H:%M') if prediction.timestamp else 'Unknown' }}</span>
+                        <span class="confidence">🎯 {{ "%.2f"|format(prediction.confidence * 100) if prediction.confidence else 'N/A' }}% confidence</span>
+                    </div>
+                </div>
+                <div class="prediction-badges">
+                    {% if prediction.is_blurry %}
+                    <span class="badge badge-warning" title="Image was blurry">⚠️ Blurry</span>
+                    {% else %}
+                    <span class="badge badge-success" title="Image quality good">✓ Clear</span>
+                    {% endif %}
+                    {% if prediction.ollama_responses and prediction.ollama_responses|length > 0 %}
+                    <span class="badge badge-primary" title="AI answers available">🤖 AI Processed</span>
+                    {% else %}
+                    <span class="badge badge-secondary" title="AI answers not generated">⏳ Pending AI</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="prediction-body">
+                {% if prediction.image_base64 %}
+                <div class="prediction-image-container">
+                    <img src="data:image/png;base64,{{ prediction.image_base64 }}" alt="Uploaded leaf">
+                </div>
+                {% endif %}
+
+                <div class="prediction-details">
+                    <div class="detail-row">
+                        <label>Image Quality:</label>
+                        <span>Blur Variance: {{ "%.2f"|format(prediction.blur_variance) if prediction.blur_variance else 'N/A' }}</span>
+                    </div>
+
+                    <div class="recommendation-section">
+                        <h4>💡 Recommendation</h4>
+                        <p>{{ prediction.recommendation or 'No recommendation available' }}</p>
+                    </div>
+
+                    {% if prediction.ollama_responses and prediction.ollama_responses|length > 0 %}
+                    <div class="ollama-section">
+                        <h4>🤖 AI Expert Insights</h4>
+                        <div class="ollama-responses">
+                            {% for response in prediction.ollama_responses %}
+                            <div class="ollama-response">
+                                <strong>Q{{ loop.index }}:</strong> {{ response.prompt }}
+                                <div class="response-text">{{ response.response }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="prediction-actions">
+                        <a href="{{ url_for('predictions.upload_page') }}" class="btn btn-sm btn-primary">
+                            💬 Chat with AI
+                        </a>
+                        <button class="btn btn-sm btn-secondary" onclick="alert('Prediction ID: {{ prediction._id }}')">
+                            📊 View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-prediction">
+        <div class="info-icon">📷</div>
+        <h2 style="color: var(--text); margin-bottom: 15px;">No Predictions Yet</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">You haven't uploaded any images for disease analysis.</p>
+        <a href="{{ url_for('predictions.upload_page') }}" class="btn btn-primary">
+            🔍 Upload Your First Image
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

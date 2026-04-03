@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Register - VillageCrop{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 data-translate="create_account">🌾 Create Account</h2>
+        <p data-translate="register_desc">Join AgroDoc-AI for AI-powered disease detection</p>
+
+        {% if error %}
+        <div class="auth-error">
+            ⚠️ {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form" id="register-form">
+            <div class="form-group">
+                <label for="username" data-translate="username_label">Username</label>
+                <input type="text" class="form-input" id="username" name="username" required
+                       data-translate-placeholder="choose_username"
+                       placeholder="Choose a username"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <div class="form-group">
+                <label for="email" data-translate="email_label">Email</label>
+                <input type="email" class="form-input" id="email" name="email" required
+                       data-translate-placeholder="enter_email"
+                       placeholder="Enter your email"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <div class="form-group">
+                <label for="password" data-translate="password_register_label">Password</label>
+                <input type="password" class="form-input" id="password" name="password" required
+                       data-translate-placeholder="password_register_placeholder"
+                       placeholder="Choose a password (min 6 characters)"
+                       minlength="6"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password" data-translate="confirm_password_label">Confirm Password</label>
+                <input type="password" class="form-input" id="confirm_password" name="confirm_password" required
+                       data-translate-placeholder="confirm_password_placeholder"
+                       placeholder="Re-enter your password"
+                       minlength="6"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <!-- Location Section -->
+            <div class="location-section">
+                <h3 data-translate="farm_location_title">📍 Your Farm Location</h3>
+                <p class="location-desc" data-translate="farm_location_desc">Help us provide location-specific crop recommendations</p>
+
+                <div class="location-type-selector">
+                    <label class="location-option">
+                        <input type="radio" name="location_type" value="gps" id="gps-option" onchange="toggleLocationInput()">
+                        <span data-translate="use_gps">🛰️ Use GPS Location</span>
+                    </label>
+                    <label class="location-option">
+                        <input type="radio" name="location_type" value="manual" id="manual-option" onchange="toggleLocationInput()" checked>
+                        <span data-translate="use_manual">📍 Enter District & State</span>
+                    </label>
+                </div>
+
+                <!-- GPS Location -->
+                <div id="gps-location" style="display: none;">
+                    <div class="form-group">
+                        <button type="button" id="get-gps-btn" class="btn btn-secondary" onclick="getGPSLocation()" data-translate="get_gps_btn">
+                            🛰️ Get My Location
+                        </button>
+                        <div id="gps-status" class="gps-status"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gps_latitude" data-translate="latitude_label">Latitude</label>
+                            <input type="text" class="form-input" id="gps_latitude" name="gps_latitude" readonly
+                                   data-translate-placeholder="auto_detected"
+                                   placeholder="Auto-detected">
+                        </div>
+                        <div class="form-group">
+                            <label for="gps_longitude" data-translate="longitude_label">Longitude</label>
+                            <input type="text" class="form-input" id="gps_longitude" name="gps_longitude" readonly
+                                   data-translate-placeholder="auto_detected"
+                                   placeholder="Auto-detected">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Location -->
+                <div id="manual-location">
+                    <div class="form-group">
+                        <label for="state" data-translate="state_label">State</label>
+                        <select class="form-input" id="state" name="state" required onchange="updateDistricts()">
+                            <option value="" data-translate="select_state">Select State</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jammu & Kashmir">Jammu & Kashmir</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Orissa">Orissa</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="district" data-translate="district_label">District</label>
+                        <select class="form-input" id="district" name="district" required disabled>
+                            <option value="" data-translate="select_state_first">Select State First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="register-btn" data-translate="create_account_btn">
+                Create Account
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <span data-translate="have_account">Already have an account?</span> <a href="{{ url_for('auth.login') }}" data-translate="login_link">Login here</a>
+        </p>
+    </div>
+</div>
+
+<style>
+.location-section {
+    background: rgba(234, 179, 8, 0.05);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.location-section h3 {
+    color: #eab308;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.location-desc {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin: 0 0 1rem 0;
+}
+
+.location-type-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.location-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.location-option:hover {
+    background: rgba(234, 179, 8, 0.1);
+    border-color: #eab308;
+}
+
+.location-option input[type="radio"] {
+    margin: 0;
+}
+
+.location-option span {
+    color: #f3f4f6;
+    font-size: 0.9rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.gps-status {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    min-height: 1.25rem;
+}
+
+.gps-status.success {
+    color: #22c55e;
+}
+
+.gps-status.error {
+    color: #ef4444;
+}
+
+.gps-status.loading {
+    color: #eab308;
+}
+
+#manual-location select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+const districtsByState = {
+    'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Anantapur'],
+    'Assam': ['Guwahati', 'Dibrugarh', 'Silchar', 'Jorhat'],
+    'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga'],
+    'Haryana': ['Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Karnal'],
+    'Himachal Pradesh': ['Shimla', 'Kullu', 'Kinnaur', 'Mandi', 'Solan'],
+    'Jammu & Kashmir': ['Srinagar', 'Baramulla', 'Shopian', 'Jammu', 'Anantnag'],
+    'Karnataka': ['Bangalore', 'Mysore', 'Bagalkot', 'Belgaum', 'Mangaluru'],
+    'Madhya Pradesh': ['Indore', 'Bhopal', 'Gwalior', 'Jabalpur', 'Ujjain'],
+    'Maharashtra': ['Mumbai', 'Pune', 'Nashik', 'Nagpur', 'Aurangabad', 'Solapur'],
+    'Orissa': ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur'],
+    'Punjab': ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda'],
+    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Theni', 'Madurai', 'Salem'],
+    'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar'],
+    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Varanasi', 'Agra', 'Prayagraj'],
+    'Uttarakhand': ['Dehradun', 'Nainital', 'Uttarkashi', 'Haridwar'],
+    'West Bengal': ['Kolkata', 'Darjeeling', 'Siliguri', 'Howrah']
+};
+
+function toggleLocationInput() {
+    const gpsOption = document.getElementById('gps-option');
+    const gpsLocation = document.getElementById('gps-location');
+    const manualLocation = document.getElementById('manual-location');
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+
+    if (gpsOption.checked) {
+        gpsLocation.style.display = 'block';
+        manualLocation.style.display = 'none';
+        stateSelect.required = false;
+        districtSelect.required = false;
+    } else {
+        gpsLocation.style.display = 'none';
+        manualLocation.style.display = 'block';
+        stateSelect.required = true;
+        districtSelect.required = true;
+    }
+}
+
+function getGPSLocation() {
+    const gpsStatus = document.getElementById('gps-status');
+    const latInput = document.getElementById('gps_latitude');
+    const lonInput = document.getElementById('gps_longitude');
+
+    if (!navigator.geolocation) {
+        gpsStatus.textContent = '❌ GPS not supported by your browser';
+        gpsStatus.className = 'gps-status error';
+        return;
+    }
+
+    gpsStatus.textContent = '🛰️ Getting your location...';
+    gpsStatus.className = 'gps-status loading';
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lon = position.coords.longitude.toFixed(6);
+
+            latInput.value = lat;
+            lonInput.value = lon;
+
+            gpsStatus.textContent = '✅ Location detected successfully!';
+            gpsStatus.className = 'gps-status success';
+        },
+        (error) => {
+            let message = '❌ Could not get location. ';
+            if (error.code === 1) {
+                message += 'Please enable location access.';
+            } else if (error.code === 2) {
+                message += 'Location unavailable.';
+            } else {
+                message += 'Please try manual entry.';
+            }
+            gpsStatus.textContent = message;
+            gpsStatus.className = 'gps-status error';
+        },
+        { timeout: 10000 }
+    );
+}
+
+function updateDistricts() {
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+    const selectedState = stateSelect.value;
+
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+
+    if (selectedState && districtsByState[selectedState]) {
+        districtsByState[selectedState].forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+        });
+        districtSelect.disabled = false;
+    } else {
+        districtSelect.innerHTML = '<option value="">Select State First</option>';
+        districtSelect.disabled = true;
+    }
+}
+
+// Form validation
+const form = document.querySelector('form');
+const registerBtn = document.getElementById('register-btn');
+const passwordInput = document.getElementById('password');
+const confirmPasswordInput = document.getElementById('confirm_password');
+
+// Real-time password match validation
+confirmPasswordInput.addEventListener('input', function() {
+    if (this.value && this.value !== passwordInput.value) {
+        this.style.borderColor = '#ef4444';
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.style.borderColor = 'rgba(234,179,8,0.2)';
+        this.setCustomValidity('');
+    }
+});
+
+passwordInput.addEventListener('input', function() {
+    if (confirmPasswordInput.value && confirmPasswordInput.value !== this.value) {
+        confirmPasswordInput.style.borderColor = '#ef4444';
+        confirmPasswordInput.setCustomValidity('Passwords do not match');
+    } else if (confirmPasswordInput.value) {
+        confirmPasswordInput.style.borderColor = 'rgba(234,179,8,0.2)';
+        confirmPasswordInput.setCustomValidity('');
+    }
+});
+
+form.addEventListener('submit', function(e) {
+    // Validate location
+    const isGPS = document.getElementById('gps-option').checked;
+
+    if (isGPS) {
+        const lat = document.getElementById('gps_latitude').value;
+        const lon = document.getElementById('gps_longitude').value;
+
+        if (!lat || !lon) {
+            e.preventDefault();
+            const gpsStatus = document.getElementById('gps-status');
+            gpsStatus.textContent = '❌ Please get your GPS location first';
+            gpsStatus.className = 'gps-status error';
+            return;
+        }
+    }
+
+    // Final password validation
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        e.preventDefault();
+        confirmPasswordInput.style.borderColor = '#ef4444';
+        confirmPasswordInput.setCustomValidity('Passwords do not match');
+        confirmPasswordInput.reportValidity();
+        return;
+    }
+
+    registerBtn.disabled = true;
+    registerBtn.textContent = '⏳ Creating account...';
+});
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+================================================================================
+           CROP INFORMATION: TOMATOES, GRAPES, AND APPLES IN INDIA
+================================================================================
+
+1. TOMATOES
+--------------------------------------------------------------------------------
+Major Growing States:
+  Maharashtra, Bihar, Karnataka, Uttar Pradesh, Orissa, Andhra Pradesh,
+  Madhya Pradesh, West Bengal, Assam.
+
+Climate Requirements:
+  - Warm-season crop.
+  - Optimal temperature: 21–27°C.
+  - Temperatures above 32°C reduce fruit set; below 10°C harms growth.
+
+Soil Requirements:
+  - Well-drained sandy loam or red loam, rich in organic matter.
+  - pH: 5.5 – 7.0.
+  - Avoid waterlogged or heavy clay soils.
+
+Planting / Transplanting Seasons:
+  - Kharif (monsoon): June – July
+  - Rabi (winter): November – December
+  - Summer: February
+
+Harvesting Periods:
+  - Kharif: October – November
+  - Rabi: April – June
+  - Summer: April – September
+
+Economics (Per Acre):
+  - Investment (seeds, fertilizer, labour, irrigation): ₹60,000 – ₹1,25,000
+    (average ~₹65,000, up to ₹90,000 in some regions)
+  - Yield: 10 – 20 tonnes (100–200 quintals)
+  - Revenue:
+      • Favourable market price (₹14–19/kg): ₹1,40,000 – ₹3,80,000
+      • Distress price (₹2–5/kg): ₹20,000 – ₹50,000 (often below cost)
+  - Note: Prices are highly volatile. Current market (March 2026) shows severe
+    price crashes with farmers receiving as low as ₹2–6 per kg in wholesale
+    markets, making profitability uncertain.
+
+Additional Notes:
+  - Grown year-round due to multiple seasons.
+  - Water stress during flowering and fruit development harms yield.
+  - Calcium deficiency can cause blossom-end rot.
+
+
+2. GRAPES
+--------------------------------------------------------------------------------
+Major Growing Regions & Zones:
+  (1) Hot Tropical: Maharashtra (Nashik, Pune), Northern Karnataka, Andhra Pradesh
+      – accounts for ~70% of production.
+  (2) Mild Tropical: Tamil Nadu, Southern Karnataka (Bangalore).
+  (3) Sub-tropical: North India (Punjab, Haryana, Uttar Pradesh).
+
+Climate Requirements:
+  - Hot and dry climate; high humidity encourages fungal diseases.
+  - Temperature range: 15–40°C depending on variety and growth stage.
+  - Regions follow distinct pruning/harvesting patterns.
+
+Soil Requirements:
+  - Well-drained soil.
+  - Rootstocks like Dogridge used to manage soil salinity.
+
+Planting (Pruning & Growth Initiation):
+  - Main crop: pruning in September – November; harvest ~3–4 months later.
+  - Early crop: pruning in July – August for an October – November harvest.
+
+Harvesting Periods:
+  - Main harvest: December – April
+  - Early harvest: October – November
+  - Wine grapes: February – March
+
+Economics (Per Acre):
+  - Specific per‑acre cost and revenue data were not available in the current
+    search results. Economics vary widely by state (Maharashtra, Karnataka,
+    Tamil Nadu), variety (table vs. wine grapes), and farming practices
+    (drip irrigation, trellising, etc.).
+  - Grapes are generally a high‑value crop with significant export potential,
+    but initial establishment costs can be substantial.
+
+Additional Notes:
+  - Drip irrigation is common; water stress reduces quality.
+  - “Double pruning and single harvest” system used in tropical regions.
+
+
+3. APPLES
+--------------------------------------------------------------------------------
+Traditional Growing Regions:
+  - Himachal Pradesh
+  - Jammu & Kashmir
+  - Uttarakhand
+  Altitude: 1500 – 2700 m (temperate climate).
+
+Non-Traditional / Experimental Regions:
+  - Maharashtra (Kolhapur, Solapur)
+  - Karnataka (Mangaluru)
+  - Telangana
+
+Climate Requirements:
+  - Temperate crop; requires cool winters with 1000–1600 chill hours.
+  - Summer temperatures: 15–25°C.
+  - Non‑traditional regions use heat‑tolerant varieties and controlled irrigation.
+
+Soil Requirements:
+  - Well-drained soil; loamy with good organic matter.
+
+Planting:
+  - Traditional: trees planted during winter dormancy (perennial crop, no fixed
+    annual planting like vegetables).
+  - Non‑traditional: pruning is used to manage growth; e.g., in Telangana,
+    pruning in December leads to harvest in May.
+
+Harvesting Periods:
+  - Traditional Himalayan regions: July – October
+  - Non‑traditional regions (e.g., Telangana, Maharashtra): May (depending on
+    variety and pruning schedule)
+
+Economics (Per Acre):
+  Traditional Orchards:
+    - Yield: 4 – 5 tonnes per acre (10–12 tonnes per hectare)
+    - Time to first harvest: up to 10 years
+    - Market price: ₹60 – ₹220 per kg depending on grade and location
+        • Haryana markets: ₹6,000–7,500 per quintal (₹60–75/kg)
+        • Tamil Nadu markets: ₹11,000–22,000 per quintal (₹110–220/kg)
+
+  High‑Density Orchards:
+    - Yield: 20 – 28 tonnes per acre (50–70 tonnes per hectare)
+    - Fruits by second year
+    - Price: ₹100–140 per kg (almost double traditional varieties)
+    - Government subsidies: up to 50% in Jammu & Kashmir for switching to
+      high‑density systems
+
+  Note: Profitability in apples depends heavily on variety, orchard management,
+  and market access. Non‑traditional regions using low‑chill varieties are
+  emerging but have different cost structures.
+
+Additional Notes:
+  - Climate change is shifting traditional apple belts.
+  - Farmers in warmer areas are successfully growing low‑chill varieties
+    (e.g., ‘Anna’, ‘G‑9’) with techniques like regulated irrigation to
+    simulate winter dormancy.
+
+================================================================================

@@ -1,0 +1,1797 @@
+{% extends "base.html" %}
+
+{% block title %}Disease Detection - VillageCrop{% endblock %}
+
+{% block content %}
+<div class="disease-detection-page">
+    <!-- HERO -->
+    <div class="hero-section">
+        <h1 class="hero-title" data-translate="agrodock_ai">🌾 AgroDoc-AI</h1>
+        <p class="hero-subtitle" data-translate="premium_ai_detection">Premium AI-powered crop disease detection</p>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    {% if error %}
+    <div class="error-message">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- MAIN CARD -->
+    <div class="main-card">
+        <!-- Upload with camera support -->
+        <label class="upload-label" id="upload-label"
+               onmouseover="this.style.borderColor='#eab308'; this.style.background='rgba(234,179,8,0.05)'"
+               onmouseout="this.style.borderColor='rgba(234,179,8,0.4)'; this.style.background='transparent'">
+            <input type="file" id="image-input" name="image" accept="image/*" capture="environment"
+                   style="display: none" onchange="handleImageSelect(event)">
+            <p id="upload-text" data-translate="upload_capture">📸 Upload or capture crop image</p>
+        </label>
+
+        <!-- Preview -->
+        <img id="preview" class="preview-image" style="display: none;" alt="Preview">
+
+        <!-- Analyze Button -->
+        <button id="analyze-btn" class="analyze-btn" style="display: none;"
+                onclick="handleAnalyze()"
+                onmouseover="if(!this.disabled){this.style.transform='scale(1.05)';this.style.boxShadow='0 0 35px rgba(234,179,8,0.8)'}"
+                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 20px rgba(234,179,8,0.4)'">
+            <span data-translate="analyze_btn">🔍 Analyze Crop Health 🌱</span>
+        </button>
+
+        <!-- Retake Button -->
+        <button id="retake-btn" class="retake-btn" style="display: none;"
+                onclick="handleRetake()"
+                onmouseover="this.style.background='#57534e'"
+                onmouseout="this.style.background='#44403c'">
+            <span data-translate="new_image">🔁 New Image</span>
+        </button>
+    </div>
+
+    <!-- LOADING -->
+    <p id="loading-text" class="loading-text" style="display: none;" data-translate="analyzing">
+        🌾 Analyzing crop health...
+    </p>
+
+    <!-- RESULT -->
+    <div id="result-card" class="result-card" style="display: none;">
+        <h3 id="result-disease">🌿 </h3>
+
+        <!-- Confidence -->
+        <div class="confidence-section">
+            <div class="confidence-header">
+                <span data-translate="confidence">Confidence</span>
+                <span class="confidence-value" id="confidence-percent">0%</span>
+            </div>
+            <div class="confidence-meter">
+                <div id="confidence-bar" class="confidence-bar high" style="width: 0%;">0%</div>
+            </div>
+        </div>
+
+        <!-- Info - Only shown for diseased plants -->
+        <div class="info-section" id="info-section">
+            <h4 data-translate="immediate_action">🚨 Immediate Action Required</h4>
+            <ul>
+                <li data-translate="remove_infected">Remove infected leaves</li>
+                <li data-translate="apply_neem">Apply neem oil or appropriate treatment</li>
+                <li data-translate="monitor_humidity">Monitor humidity levels</li>
+                <li data-translate="isolate_plants">Isolate affected plants if needed</li>
+            </ul>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="recommendation-section">
+            <h4 data-translate="recommendation">💡 Recommendation</h4>
+            <p id="result-recommendation"></p>
+        </div>
+
+        <!-- Yield Impact Section (only for diseased plants) -->
+        <div class="yield-impact-section" id="yield-impact-section" style="display: none;">
+            <h3 data-translate="yield_impact">📊 Yield Impact Analysis</h3>
+            <div class="yield-info-cards">
+                <div class="yield-card">
+                    <div class="yield-card-icon">🌱</div>
+                    <div class="yield-card-label" data-translate="crop_type">Crop Type</div>
+                    <div class="yield-card-value" id="crop-type-value">-</div>
+                </div>
+                <div class="yield-card">
+                    <div class="yield-card-icon">📏</div>
+                    <div class="yield-card-label" data-translate="affected_area">Affected Area</div>
+                    <div class="yield-card-value" id="acres-value">-</div>
+                </div>
+                <div class="yield-card">
+                    <div class="yield-card-icon">📅</div>
+                    <div class="yield-card-label" data-translate="planting_month">Planting Month</div>
+                    <div class="yield-card-value" id="planting-month-value">-</div>
+                </div>
+                <div class="yield-card">
+                    <div class="yield-card-icon">⏳</div>
+                    <div class="yield-card-label" data-translate="months_to_harvest">Months to Harvest</div>
+                    <div class="yield-card-value" id="months-to-harvest-value">-</div>
+                </div>
+            </div>
+
+            <div class="yield-loss-details">
+                <div class="loss-row">
+                    <span data-translate="initial_impact">Initial Disease Impact:</span>
+                    <span class="loss-value initial" id="initial-loss">12%</span>
+                </div>
+                <div class="loss-row">
+                    <span data-translate="monthly_spread">Monthly Spread Rate:</span>
+                    <span class="loss-value spread" id="monthly-spread">8%/month</span>
+                </div>
+                <div class="loss-row total">
+                    <span data-translate="total_loss">Total Expected Loss:</span>
+                    <span class="loss-value total" id="total-loss">-</span>
+                </div>
+            </div>
+
+            <div class="yield-comparison">
+                <div class="comparison-bar-container">
+                    <div class="comparison-bar">
+                        <div class="bar-segment salvageable" id="salvageable-bar" style="width: 0%;">
+                            <span class="bar-label" data-translate="salvageable">Salvageable</span>
+                        </div>
+                        <div class="bar-segment lost" id="lost-bar" style="width: 0%;">
+                            <span class="bar-label" data-translate="lost">Lost</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-values">
+                    <div class="value-item salvageable">
+                        <span class="value-label" data-translate="expected_yield">Expected Yield (if treated):</span>
+                        <span class="value-number" id="salvageable-yield">-</span>
+                    </div>
+                    <div class="value-item lost">
+                        <span class="value-label" data-translate="potential_loss">Potential Loss:</span>
+                        <span class="value-number" id="lost-yield">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="economic-impact">
+                <h4 data-translate="economic_impact">💰 Economic Impact</h4>
+                <div class="economic-grid">
+                    <div class="economic-item">
+                        <span class="econ-label" data-translate="expected_revenue">Expected Revenue (after loss):</span>
+                        <span class="econ-value" id="expected-revenue">₹ -</span>
+                    </div>
+                    <div class="economic-item">
+                        <span class="econ-label" data-translate="treatment_cost">Treatment Cost Estimate:</span>
+                        <span class="econ-value cost" id="treatment-cost">₹ -</span>
+                    </div>
+                    <div class="economic-item">
+                        <span class="econ-label" data-translate="net_revenue">Net Revenue:</span>
+                        <span class="econ-value net" id="net-revenue">₹ -</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="crop-info-btn" onclick="openCropInfoModal()"
+                    onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 0 25px rgba(234,179,8,0.6)'"
+                    onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 15px rgba(234,179,8,0.3)'">
+                <span data-translate="update_crop_info">📝 Update Crop Information</span>
+            </button>
+        </div>
+
+        <button class="speak-btn" onclick="speakResult()"
+                onmouseover="this.style.background='#84cc16'"
+                onmouseout="this.style.background='#65a30d'">
+            <span data-translate="hear_advice">🔊 Hear Advice</span>
+        </button>
+    </div>
+
+    <!-- CROP INFO MODAL -->
+    <div id="crop-info-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 data-translate="crop_info_modal_title">🌾 Crop Information</h3>
+                <button class="modal-close" onclick="closeCropInfoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc" data-translate="crop_info_desc">Enter your crop details to calculate yield impact and get personalized recommendations.</p>
+
+                <form id="crop-info-form" onsubmit="submitCropInfo(event)">
+                    <div class="form-group">
+                        <label for="crop-acres" data-translate="total_area">Total Affected Area (acres)</label>
+                        <input type="number" class="form-input" id="crop-acres" name="acres"
+                               step="0.1" min="0.1" max="1000" required
+                               data-translate-placeholder="area_placeholder"
+                               placeholder="e.g., 2.5">
+                        <small class="form-hint" data-translate="area_hint">Enter the total area where this crop is planted</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="planting-month" data-translate="planting_month_label">Planting Month</label>
+                        <select class="form-input" id="planting-month" name="planting_month" required>
+                            <option value="" data-translate="select_month">Select Month</option>
+                            <option value="1" data-translate="january">January</option>
+                            <option value="2" data-translate="february">February</option>
+                            <option value="3" data-translate="march">March</option>
+                            <option value="4" data-translate="april">April</option>
+                            <option value="5" data-translate="may">May</option>
+                            <option value="6" data-translate="june">June</option>
+                            <option value="7" data-translate="july">July</option>
+                            <option value="8" data-translate="august">August</option>
+                            <option value="9" data-translate="september">September</option>
+                            <option value="10" data-translate="october">October</option>
+                            <option value="11" data-translate="november">November</option>
+                            <option value="12" data-translate="december">December</option>
+                        </select>
+                        <small class="form-hint" data-translate="planting_hint">When did you plant/prune this crop?</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="farming-type" data-translate="farming_type">Farming Type</label>
+                        <select class="form-input" id="farming-type" name="farming_type">
+                            <option value="traditional" data-translate="traditional">Traditional</option>
+                            <option value="high_density" data-translate="high_density">High Density (Apple only)</option>
+                        </select>
+                    </div>
+
+                    <div id="crop-info-message" class="message-box" style="display: none;"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submit-crop-btn" data-translate="calculate_yield">
+                        Calculate Yield Impact
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT SECTION -->
+    <div id="chatbot-section" class="chatbot-section" style="display: none;">
+        <div class="chatbot-header">
+            <h3 data-translate="ai_assistant">🤖 AI Agricultural Assistant</h3>
+            <p data-translate="ai_assistant_desc">Powered by Ollama Phi-3 • Ask anything about your crop diagnosis</p>
+        </div>
+
+        <div class="chat-container">
+            <div id="chat-messages" class="chat-messages">
+                <!-- Messages will be added here -->
+            </div>
+
+            <div class="chat-input-area">
+                <textarea
+                    id="chat-input"
+                    class="chat-input"
+                    data-translate-placeholder="chat_placeholder"
+                    placeholder="Ask about symptoms, treatments, prevention..."
+                    rows="2"
+                    onkeypress="handleKeyPress(event)"
+                ></textarea>
+                <button id="voice-btn" class="voice-btn" onclick="toggleVoiceInput()" title="Voice Input">
+                    🎤
+                </button>
+                <button id="send-btn" class="send-btn" onclick="handleSendMessage()" data-translate="send">
+                    📤 Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Animations -->
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Error Messages */
+.error-message {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    margin: 1rem auto;
+    max-width: 600px;
+    border: 2px solid #fca5a5;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.error-message.low-confidence {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #fcd34d;
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.error-message.not-a-leaf {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #f87171;
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+}
+
+.not-a-leaf-content h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    padding-bottom: 0.5rem;
+}
+
+.leaf-detection-info {
+    background: rgba(255,255,255,0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.leaf-detection-info h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.leaf-detection-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.leaf-detection-info li {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+.low-confidence-content h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    padding-bottom: 0.5rem;
+}
+
+.low-confidence-content p {
+    margin: 0.75rem 0;
+    line-height: 1.6;
+}
+
+.retake-tips {
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.retake-tips .tip {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.top-predictions {
+    background: rgba(255,255,255,0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.top-predictions ul {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.5rem;
+}
+
+.top-predictions li {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+.retake-action {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid rgba(255,255,255,0.3);
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Chatbot Styles */
+.chatbot-section {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.chatbot-header {
+    background: linear-gradient(135deg, #1f2937, #111827);
+    padding: 1.5rem;
+    border-radius: 1rem 1rem 0 0;
+    border: 1px solid #374151;
+    border-bottom: none;
+}
+
+.chatbot-header h3 {
+    color: #fbbf24;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.chatbot-header p {
+    color: #9ca3af;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.chat-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 0 0 1rem 1rem;
+    overflow: hidden;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+}
+
+.message {
+    max-width: 85%;
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.user-message {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #1c1917;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.ai-message {
+    align-self: flex-start;
+    background: var(--bg-input);
+    color: var(--text);
+    border-bottom-left-radius: 0.25rem;
+    position: relative;
+}
+
+/* Speak button for AI messages */
+.speak-response-btn {
+    position: absolute;
+    bottom: -10px;
+    right: 10px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.speak-response-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+}
+
+.speak-response-btn:active {
+    transform: scale(0.95);
+}
+
+.message-content {
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.message-content .bullet {
+    color: #fbbf24;
+    margin-right: 0.5rem;
+}
+
+.message-sender {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    text-align: right;
+}
+
+.typing .typing-dots {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: #111827;
+    border-top: 1px solid #374151;
+}
+
+.chat-input {
+    flex: 1;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #f3f4f6;
+    font-size: 0.95rem;
+    resize: none;
+    font-family: inherit;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #eab308;
+}
+
+.send-btn {
+    background: linear-gradient(135deg, #eab308, #facc15);
+    color: #1c1917;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+}
+
+.send-btn:active {
+    transform: translateY(0);
+}
+
+/* Voice Button */
+.voice-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+}
+
+.voice-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.voice-btn:active {
+    transform: translateY(0);
+}
+
+.voice-btn.listening {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+    }
+}
+
+/* Yield Impact Section */
+.yield-impact-section {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(234, 179, 8, 0.05));
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.yield-impact-section h3 {
+    color: #eab308;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+}
+
+.yield-info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.yield-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.yield-card-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.yield-card-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-bottom: 0.25rem;
+}
+
+.yield-card-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fbbf24;
+}
+
+.yield-loss-details {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.loss-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loss-row:last-child {
+    border-bottom: none;
+}
+
+.loss-value {
+    font-weight: 600;
+}
+
+.loss-value.initial {
+    color: #f59e0b;
+}
+
+.loss-value.spread {
+    color: #f97316;
+}
+
+.loss-value.total {
+    color: #ef4444;
+    font-size: 1.1rem;
+}
+
+.loss-row.total {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid rgba(234, 179, 8, 0.3);
+}
+
+.yield-comparison {
+    margin-bottom: 1.5rem;
+}
+
+.comparison-bar-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    height: 2rem;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.comparison-bar {
+    display: flex;
+    height: 100%;
+    transition: all 0.5s ease-out;
+}
+
+.bar-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: width 0.5s ease-out;
+}
+
+.bar-segment.salvageable {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.bar-segment.lost {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.comparison-values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.value-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.value-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.value-number {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.value-item.salvageable .value-number {
+    color: #22c55e;
+}
+
+.value-item.lost .value-number {
+    color: #ef4444;
+}
+
+.economic-impact {
+    background: rgba(234, 179, 8, 0.05);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.economic-impact h4 {
+    color: #eab308;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+}
+
+.economic-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.economic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.economic-item:last-child {
+    border-bottom: none;
+}
+
+.econ-label {
+    font-size: 0.875rem;
+    color: #f3f4f6;
+}
+
+.econ-value {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.econ-value.cost {
+    color: #f97316;
+}
+
+.econ-value.net {
+    color: #22c55e;
+}
+
+.crop-info-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #eab308, #facc15);
+    color: #1c1917;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: #1f2937;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 1rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: scaleIn 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.modal-header h3 {
+    color: #eab308;
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #ef4444;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-desc {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.form-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #f3f4f6;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #eab308;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-hint {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.message-box {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.message-box.success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid #22c55e;
+    color: #22c55e;
+}
+
+.message-box.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
+
+.message-box.loading {
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid #eab308;
+    color: #eab308;
+}
+
+.btn-block {
+    width: 100%;
+}
+</style>
+
+<script>
+    let selectedImage = null;
+    let resultData = null;
+    let confidenceAnimation = 0;
+    let conversationHistory = [];  // Track conversation for context
+    let ollamaPollingInterval = null;
+    
+    // Voice input variables
+    let isListening = false;
+    let recognition = null;
+    let userLanguage = 'en';  // Will be set from backend
+    
+    // Initialize speech recognition
+    function initSpeechRecognition() {
+        // Check for browser support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            console.warn('Speech recognition not supported in this browser');
+            document.getElementById('voice-btn').style.display = 'none';
+            return;
+        }
+        
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        
+        // Set language based on user's preference
+        const langCodes = {
+            'en': 'en-US',
+            'hi': 'hi-IN',
+            'kn': 'kn-IN'
+        };
+        recognition.lang = langCodes[userLanguage] || 'en-US';
+        
+        recognition.onstart = function() {
+            isListening = true;
+            document.getElementById('voice-btn').classList.add('listening');
+            document.getElementById('chat-input').placeholder = 
+                userLanguage === 'hi' ? '🎤 सुन रहा है...' :
+                userLanguage === 'kn' ? '🎤 ಕೇಳುತ್ತಿದೆ...' :
+                '🎤 Listening...';
+        };
+        
+        recognition.onend = function() {
+            isListening = false;
+            document.getElementById('voice-btn').classList.remove('listening');
+            // Restore original placeholder
+            const placeholders = {
+                'en': 'Ask about symptoms, treatments, prevention...',
+                'hi': 'लक्षण, उपचार, रोकथाम के बारे में पूछें...',
+                'kn': 'ಲಕ್ಷಣಗಳು, ಚಿಕಿತ್ಸೆಗಳು, ತಡೆಗಟ್ಟುವಿಕೆ ಬಗ್ಗೆ ಕೇಳಿ...'
+            };
+            document.getElementById('chat-input').placeholder = placeholders[userLanguage] || placeholders['en'];
+        };
+        
+        recognition.onresult = function(event) {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            
+            // Put the transcribed text in the input field
+            document.getElementById('chat-input').value = transcript;
+            
+            // If final result, automatically send
+            if (event.results[0].isFinal) {
+                // Send to backend for translation to English
+                translateVoiceInput(transcript);
+            }
+        };
+        
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            isListening = false;
+            document.getElementById('voice-btn').classList.remove('listening');
+            
+            let errorMsg = '';
+            if (userLanguage === 'hi') {
+                errorMsg = event.error === 'no-speech' ? 'कोई आवाज नहीं सुनी गई' : 
+                          event.error === 'not-allowed' ? 'माइक अनुमति नहीं दी गई' :
+                          'वॉयस इनपुट त्रुटि';
+            } else if (userLanguage === 'kn') {
+                errorMsg = event.error === 'no-speech' ? 'ಯಾವುದೇ ಧ್ವನಿ ಕೇಳಿಸಲಿಲ್ಲ' :
+                          event.error === 'not-allowed' ? 'ಮೈಕ್ ಅನುಮತಿ ನೀಡಿಲ್ಲ' :
+                          'ಧ್ವನಿ ಇನ್ಪುಟ್ ದೋಷ';
+            } else {
+                errorMsg = event.error === 'no-speech' ? 'No speech detected' :
+                          event.error === 'not-allowed' ? 'Microphone permission denied' :
+                          'Voice input error';
+            }
+            
+            alert('⚠️ ' + errorMsg);
+        };
+    }
+    
+    // Toggle voice input
+    function toggleVoiceInput() {
+        if (!recognition) {
+            initSpeechRecognition();
+            if (!recognition) {
+                alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
+                return;
+            }
+        }
+        
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    }
+    
+    // Translate voice input from user language to English
+    async function translateVoiceInput(text) {
+        if (userLanguage === 'en') {
+            // Already in English, send directly
+            handleSendMessage();
+            return;
+        }
+        
+        // Show translating state
+        const voiceBtn = document.getElementById('voice-btn');
+        const originalContent = voiceBtn.innerHTML;
+        voiceBtn.innerHTML = '⏳';
+        voiceBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/ollama/api/translate-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    source_lang: userLanguage,
+                    target_lang: 'en'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Put translated text in input
+                document.getElementById('chat-input').value = data.translated_text + ' (translated from ' + 
+                    (userLanguage === 'hi' ? 'Hindi' : userLanguage === 'kn' ? 'Kannada' : 'your language') + ')';
+                
+                // Send the translated message
+                handleSendMessage();
+            } else {
+                alert('⚠️ Translation failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('Translation error:', err);
+            alert('⚠️ Translation error. Please type your message.');
+        } finally {
+            voiceBtn.innerHTML = originalContent;
+            voiceBtn.disabled = false;
+        }
+    }
+
+    function handleImageSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            selectedImage = file;
+            const preview = document.getElementById('preview');
+            const uploadText = document.getElementById('upload-text');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const retakeBtn = document.getElementById('retake-btn');
+            const resultCard = document.getElementById('result-card');
+            
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+            uploadText.textContent = '📸 Change image';
+            analyzeBtn.style.display = 'block';
+            retakeBtn.style.display = 'block';
+            resultCard.style.display = 'none';
+            
+            // Reset result
+            resultData = null;
+        }
+    }
+
+    async function handleAnalyze() {
+        if (!selectedImage) return;
+
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loadingText = document.getElementById('loading-text');
+        const retakeBtn = document.getElementById('retake-btn');
+        const errorDiv = document.querySelector('.error-message');
+
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = '⏳ Analyzing...';
+        analyzeBtn.style.background = 'linear-gradient(135deg, #6b7280, #4b5563)';
+        analyzeBtn.style.color = '#9ca3af';
+        loadingText.style.display = 'block';
+        retakeBtn.style.display = 'none';
+
+        // Clear previous errors
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('image', selectedImage);
+
+        try {
+            const response = await fetch('/predictions/api/predict', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                resultData = {
+                    disease: data.disease,
+                    confidence: data.confidence,
+                    recommendation: data.recommendation,
+                    prediction_id: data.prediction_id  // Store prediction ID for crop info
+                };
+                displayResult(resultData);
+            } else {
+                // Handle leaf detection failure - not a leaf
+                if (data.retake_reason === 'not_a_leaf') {
+                    showNotALeafError(data);
+                }
+                // Handle low confidence - ask user to retake
+                else if (data.needs_retake) {
+                    if (data.retake_reason === 'low_confidence') {
+                        showLowConfidenceError(data);
+                    } else if (data.retake_reason === 'blurry') {
+                        showError('⚠️ Image Too Blurry<br><small>Please retake with a clearer, more focused image.</small>');
+                    } else {
+                        showError('⚠️ ' + (data.error || 'Analysis failed'));
+                    }
+                } else {
+                    showError('⚠️ ' + (data.error || 'Analysis failed'));
+                }
+                resetButtons();
+            }
+        } catch (err) {
+            showError('Failed to connect to server. Make sure Flask backend is running.');
+            console.error(err);
+            resetButtons();
+        }
+    }
+    
+    function showError(message) {
+        let errorDiv = document.querySelector('.error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            document.querySelector('.hero-section').after(errorDiv);
+        }
+        errorDiv.innerHTML = message;
+        errorDiv.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function showLowConfidenceError(data) {
+        let errorDiv = document.querySelector('.error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message low-confidence';
+            document.querySelector('.hero-section').after(errorDiv);
+        }
+
+        // Build top 3 predictions HTML if available
+        let top3Html = '';
+        if (data.top3_predictions && data.top3_predictions.length > 0) {
+            top3Html = '<div class="top-predictions"><strong>AI Uncertainty:</strong><ul>';
+            data.top3_predictions.forEach((pred, i) => {
+                top3Html += `<li>${pred.disease} (${(pred.confidence * 100).toFixed(1)}%)</li>`;
+            });
+            top3Html += '</ul></div>';
+        }
+
+        errorDiv.innerHTML = `
+            <div class="low-confidence-content">
+                <h3>⚠️ Low Confidence Detection</h3>
+                <p><strong>Our AI is uncertain about this image (${(data.confidence * 100).toFixed(1)}% confidence).</strong></p>
+                <p>Please retake the photo with these tips for better results:</p>
+                <div class="retake-tips">
+                    <div class="tip">✅ <strong>Good Lighting:</strong> Use natural daylight or bright, even lighting</div>
+                    <div class="tip">✅ <strong>Clear Focus:</strong> Make sure the leaf is sharp and not blurry</div>
+                    <div class="tip">✅ <strong>Close-up Shot:</strong> Fill the frame with the affected leaf</div>
+                    <div class="tip">✅ <strong>Supported Crops:</strong> Apple, Grape, or Tomato leaves only</div>
+                    <div class="tip">✅ <strong>Multiple Angles:</strong> Try photographing from different angles</div>
+                </div>
+                ${top3Html}
+                <p class="retake-action"><strong>🔁 Click "New Image" below to retake your photo.</strong></p>
+            </div>
+        `;
+        errorDiv.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function showNotALeafError(data) {
+        let errorDiv = document.querySelector('.error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message not-a-leaf';
+            document.querySelector('.hero-section').after(errorDiv);
+        }
+
+        // Get leaf detection details
+        const leafDetection = data.leaf_detection || {};
+        const greenRatio = leafDetection.green_ratio ? (leafDetection.green_ratio * 100).toFixed(1) : 'N/A';
+        const reason = leafDetection.reason || 'unknown';
+
+        errorDiv.innerHTML = `
+            <div class="not-a-leaf-content">
+                <h3>🚫 No Leaf Detected</h3>
+                <p><strong>${data.error}</strong></p>
+                
+                <div class="leaf-detection-info">
+                    <h4>📊 Analysis Results:</h4>
+                    <ul>
+                        <li><strong>Green Area:</strong> ${greenRatio}%</li>
+                        <li><strong>Reason:</strong> ${leafDetection.message || 'Unable to identify leaf'}</li>
+                    </ul>
+                </div>
+
+                <div class="retake-tips">
+                    <h4>📸 How to Take a Good Leaf Photo:</h4>
+                    <div class="tip">🌿 <strong>Single Leaf:</strong> Focus on one leaf at a time</div>
+                    <div class="tip">💚 <strong>Green Color:</strong> Ensure the leaf is clearly visible and green</div>
+                    <div class="tip">📐 <strong>Angle:</strong> Photograph from above or the side, showing the leaf surface</div>
+                    <div class="tip">🔍 <strong>Close-up:</strong> Fill most of the frame with the leaf</div>
+                    <div class="tip">☀️ <strong>Lighting:</strong> Use good natural light, avoid shadows</div>
+                    <div class="tip">🎯 <strong>Supported Plants:</strong> Apple, Grape, or Tomato plants only</div>
+                </div>
+
+                <p class="retake-action"><strong>🔁 Click "New Image" below and try again with a clear leaf photo.</strong></p>
+            </div>
+        `;
+        errorDiv.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function displayResult(result) {
+        const loadingText = document.getElementById('loading-text');
+        const resultCard = document.getElementById('result-card');
+        const resultDisease = document.getElementById('result-disease');
+        const resultRecommendation = document.getElementById('result-recommendation');
+        const confidencePercent = document.getElementById('confidence-percent');
+        const confidenceBar = document.getElementById('confidence-bar');
+        const retakeBtn = document.getElementById('retake-btn');
+        const chatbotSection = document.getElementById('chatbot-section');
+        const infoSection = document.querySelector('.info-section');
+        const yieldImpactSection = document.getElementById('yield-impact-section');
+
+        loadingText.style.display = 'none';
+        resultCard.style.display = 'block';
+        retakeBtn.style.display = 'block';
+
+        resultDisease.textContent = '🌿 ' + result.disease;
+        resultRecommendation.textContent = result.recommendation || 'Consult a local agronomist for treatment options.';
+
+        // Check if plant is healthy - hide "Immediate Action" and "Yield Impact" sections if so
+        const isHealthy = result.disease.toLowerCase().includes('healthy');
+        if (infoSection) {
+            infoSection.style.display = isHealthy ? 'none' : 'block';
+        }
+        
+        // Hide yield impact for healthy plants - only show for diseased plants
+        if (yieldImpactSection) {
+            yieldImpactSection.style.display = isHealthy ? 'none' : 'block';
+        }
+
+        // Animate confidence
+        const targetConfidence = Math.round(result.confidence * 100);
+        confidenceAnimation = 0;
+
+        const interval = setInterval(() => {
+            confidenceAnimation += 2;
+            if (confidenceAnimation >= targetConfidence) {
+                confidenceAnimation = targetConfidence;
+                clearInterval(interval);
+            }
+
+            confidencePercent.textContent = confidenceAnimation + '%';
+            confidenceBar.style.width = confidenceAnimation + '%';
+            confidenceBar.textContent = confidenceAnimation + '%';
+
+            // Update color based on confidence
+            confidenceBar.className = 'confidence-bar';
+            if (confidenceAnimation > 80) {
+                confidenceBar.classList.add('high');
+            } else if (confidenceAnimation > 60) {
+                confidenceBar.classList.add('medium');
+            } else {
+                confidenceBar.classList.add('low');
+            }
+        }, 20);
+
+        // Show chatbot section after prediction
+        showChatbot(result);
+
+        resetButtons();
+    }
+
+    function showChatbot(prediction) {
+        const chatbotSection = document.getElementById('chatbot-section');
+        const chatMessages = document.getElementById('chat-messages');
+
+        // Store prediction for chatbot context
+        window.currentPrediction = prediction;
+
+        // Get user's language preference from backend
+        fetchUserLanguage();
+
+        // Show chatbot section
+        chatbotSection.style.display = 'block';
+        chatbotSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Clear previous messages and conversation history
+        chatMessages.innerHTML = '';
+        conversationHistory = [];
+
+        // Show loading state while waiting for Ollama to generate responses
+        addLoadingMessage(prediction.disease);
+
+        // Poll for Ollama responses (they're being generated in background)
+        pollForOllamaResponses(prediction);
+    }
+    
+    // Fetch user's language preference from backend
+    async function fetchUserLanguage() {
+        try {
+            const response = await fetch('/ollama/api/user-language');
+            const data = await response.json();
+            
+            if (data.success) {
+                userLanguage = data.language || 'en';
+                
+                // Initialize speech recognition with correct language
+                initSpeechRecognition();
+                
+                // Update chat input placeholder
+                const placeholders = {
+                    'en': 'Ask about symptoms, treatments, prevention...',
+                    'hi': 'लक्षण, उपचार, रोकथाम के बारे में पूछें...',
+                    'kn': 'ಲಕ್ಷಣಗಳು, ಚಿಕಿತ್ಸೆಗಳು, ತಡೆಗಟ್ಟುವಿಕೆ ಬಗ್ಗೆ ಕೇಳಿ...'
+                };
+                document.getElementById('chat-input').placeholder = placeholders[userLanguage] || placeholders['en'];
+            }
+        } catch (err) {
+            console.error('Error fetching language:', err);
+            userLanguage = 'en';
+            initSpeechRecognition();
+        }
+    }
+
+    function addLoadingMessage(disease) {
+        const chatMessages = document.getElementById('chat-messages');
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'message ai-message typing';
+        loadingDiv.id = 'ollama-loading';
+        
+        // Check if it's a healthy plant (from disease name)
+        const isHealthy = disease.toLowerCase().includes('healthy');
+        const loadingText = isHealthy 
+            ? "🌿 Analyzing your plant's health..."
+            : "🔬 Generating expert analysis for your crop...";
+        
+        loadingDiv.innerHTML = `
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #9ca3af;">
+                ${loadingText}
+            </div>
+        `;
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function pollForOllamaResponses(prediction) {
+        let attempts = 0;
+        const maxAttempts = 30;  // Try for up to 30 seconds
+
+        ollamaPollingInterval = setInterval(async () => {
+            attempts++;
+
+            try {
+                const response = await fetch('/predictions/api/latest');
+                const data = await response.json();
+
+                if (data.success && data.prediction) {
+                    const hasSummary = data.prediction.ollama_summary;
+
+                    if (hasSummary) {
+                        clearInterval(ollamaPollingInterval);
+
+                        // Remove loading message
+                        const loadingMsg = document.getElementById('ollama-loading');
+                        if (loadingMsg) loadingMsg.remove();
+
+                        // Show the summary (healthy message or disease analysis)
+                        addMessage('ai', data.prediction.ollama_summary);
+                        
+                        // Update prediction data with the summary
+                        window.currentPrediction.ollama_summary = data.prediction.ollama_summary;
+                    }
+                }
+            } catch (err) {
+                console.error('Polling error:', err);
+            }
+
+            // Stop polling after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(ollamaPollingInterval);
+                const loadingMsg = document.getElementById('ollama-loading');
+                if (loadingMsg) {
+                    loadingMsg.innerHTML = `
+                        <div style="color: #fbbf24;">
+                            ⏳ Analysis is taking longer than expected. 
+                            Start chatting and I'll generate responses on-demand!
+                        </div>
+                    `;
+                }
+            }
+        }, 1000);  // Poll every second
+    }
+
+    function addMessage(sender, text) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        // Convert markdown-style formatting to HTML
+        let formattedText = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/•/g, '<span class="bullet">•</span>')
+            .replace(/\n/g, '<br>');
+        
+        messageDiv.innerHTML = `
+            <div class="message-content">${formattedText}</div>
+            <div class="message-sender">${sender === 'ai' ? '🤖 AI Assistant' : 'You'}</div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function handleSendMessage() {
+        const messageInput = document.getElementById('chat-input');
+        const message = messageInput.value.trim();
+
+        if (!message || !window.currentPrediction) return;
+
+        // Add user message to chat and history
+        addMessage('user', message);
+        conversationHistory.push({
+            'role': 'user',
+            'content': message
+        });
+        messageInput.value = '';
+
+        // Show typing indicator
+        const chatMessages = document.getElementById('chat-messages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message ai-message typing';
+        typingDiv.id = 'typing-indicator';
+        typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const response = await fetch('/ollama/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    disease: window.currentPrediction.disease,
+                    confidence: window.currentPrediction.confidence,
+                    history: conversationHistory  // Send full conversation history
+                })
+            });
+
+            const data = await response.json();
+
+            // Remove typing indicator
+            typingDiv.remove();
+
+            if (data.success) {
+                // Add AI response to chat and history
+                addMessage('ai', data.response);
+
+                // Only add to history if it's not the initial summary
+                if (!data.is_summary) {
+                    conversationHistory.push({
+                        'role': 'assistant',
+                        'content': data.response
+                    });
+                }
+                
+                // If user language is not English, offer to speak the response
+                if (userLanguage !== 'en' && data.language === userLanguage) {
+                    // Add speak button to the last message
+                    const lastMessage = chatMessages.lastElementChild;
+                    if (lastMessage) {
+                        const speakBtn = document.createElement('button');
+                        speakBtn.className = 'speak-response-btn';
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.onclick = () => speakText(data.response);
+                        speakBtn.title = userLanguage === 'hi' ? 'सुनें' : 
+                                        userLanguage === 'kn' ? 'ಕೇಳಿ' : 'Listen';
+                        lastMessage.appendChild(speakBtn);
+                    }
+                }
+            } else {
+                addMessage('ai', '⚠️ Sorry, I\'m having trouble connecting to the AI server. Please make sure Ollama is running.');
+            }
+        } catch (err) {
+            typingDiv.remove();
+            addMessage('ai', '⚠️ Connection error. Please check if the backend is running.');
+            console.error(err);
+        }
+    }
+    
+    // Text-to-speech for AI responses
+    function speakText(text) {
+        if (!window.speechSynthesis) {
+            alert('Text-to-speech not supported in your browser');
+            return;
+        }
+        
+        // Remove any formatting for TTS
+        const cleanText = text.replace(/\*\*/g, '').replace(/•/g, '').replace(/[#*_]/g, '');
+        
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        // Set language for TTS
+        const langCodes = {
+            'en': 'en-US',
+            'hi': 'hi-IN',
+            'kn': 'kn-IN'
+        };
+        utterance.lang = langCodes[userLanguage] || 'en-US';
+        
+        // Adjust rate for better comprehension
+        utterance.rate = 0.9;
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            handleSendMessage();
+        }
+    }
+
+    function resetButtons() {
+        const analyzeBtn = document.getElementById('analyze-btn');
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = '🔍 Analyze Crop Health 🌱';
+        analyzeBtn.style.background = 'linear-gradient(135deg, #eab308, #facc15)';
+        analyzeBtn.style.color = '#1c1917';
+    }
+
+    function handleRetake() {
+        selectedImage = null;
+        resultData = null;
+        
+        const preview = document.getElementById('preview');
+        const uploadText = document.getElementById('upload-text');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const retakeBtn = document.getElementById('retake-btn');
+        const resultCard = document.getElementById('result-card');
+        const imageInput = document.getElementById('image-input');
+        
+        preview.style.display = 'none';
+        preview.src = '';
+        uploadText.textContent = '📸 Upload or capture crop image';
+        analyzeBtn.style.display = 'none';
+        retakeBtn.style.display = 'none';
+        resultCard.style.display = 'none';
+        imageInput.value = '';
+    }
+
+    function speakResult() {
+        if (!resultData) return;
+
+        const confidence = Math.round(resultData.confidence * 100);
+        const message = `${resultData.disease} detected with ${confidence}% confidence. ${resultData.recommendation}`;
+
+        const utterance = new SpeechSynthesisUtterance(message);
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Crop Info Modal Functions
+    function openCropInfoModal() {
+        const modal = document.getElementById('crop-info-modal');
+        modal.style.display = 'flex';
+        
+        // Auto-detect crop type from disease
+        if (resultData && resultData.disease) {
+            const disease = resultData.disease.toLowerCase();
+            const farmingTypeSelect = document.getElementById('farming-type');
+            
+            if (disease.includes('apple')) {
+                farmingTypeSelect.style.display = 'block';
+            } else {
+                farmingTypeSelect.style.display = 'none';
+            }
+        }
+    }
+
+    function closeCropInfoModal() {
+        const modal = document.getElementById('crop-info-modal');
+        modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('crop-info-modal');
+        if (event.target === modal) {
+            closeCropInfoModal();
+        }
+    }
+
+    async function submitCropInfo(event) {
+        event.preventDefault();
+        
+        const acres = document.getElementById('crop-acres').value;
+        const plantingMonth = document.getElementById('planting-month').value;
+        const farmingType = document.getElementById('farming-type').value;
+        const messageBox = document.getElementById('crop-info-message');
+        const submitBtn = document.getElementById('submit-crop-btn');
+
+        if (!resultData || !resultData.prediction_id) {
+            showMessage(messageBox, 'Error: No prediction found', 'error');
+            return;
+        }
+
+        // Show loading
+        showMessage(messageBox, '⏳ Calculating yield impact...', 'loading');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Calculating...';
+
+        try {
+            const response = await fetch('/predictions/api/save-crop-info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prediction_id: resultData.prediction_id,
+                    acres: parseFloat(acres),
+                    planting_month: parseInt(plantingMonth),
+                    farming_type: farmingType
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showMessage(messageBox, '✅ Yield calculated successfully!', 'success');
+                
+                // Update UI with yield analysis
+                updateYieldDisplay(data);
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    closeCropInfoModal();
+                    document.getElementById('crop-info-form').reset();
+                }, 2000);
+            } else {
+                showMessage(messageBox, '⚠️ ' + (data.error || 'Failed to calculate yield'), 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage(messageBox, '❌ Connection error. Please try again.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Calculate Yield Impact';
+        }
+    }
+
+    function showMessage(element, text, type) {
+        element.textContent = text;
+        element.className = `message-box ${type}`;
+        element.style.display = 'block';
+    }
+
+    function updateYieldDisplay(data) {
+        const expectedYield = data.expected_yield;
+        const diseaseImpact = data.disease_impact;
+        const cropType = data.crop_type;
+
+        // Update crop info cards
+        document.getElementById('crop-type-value').textContent = cropType;
+        document.getElementById('acres-value').textContent = diseaseImpact.acres + ' acres';
+
+        // Use translated planting month if available, otherwise use English month abbreviations
+        const plantingMonthValue = document.getElementById('planting-month-value');
+        if (diseaseImpact.planting_month_translated) {
+            // Backend provided translated month
+            plantingMonthValue.textContent = diseaseImpact.planting_month_translated;
+        } else {
+            // Fallback to English month abbreviations
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            plantingMonthValue.textContent = monthNames[diseaseImpact.planting_month - 1];
+        }
+
+        document.getElementById('months-to-harvest-value').textContent = diseaseImpact.months_to_harvest + ' months';
+
+        // Update loss details
+        const yieldLoss = diseaseImpact.yield_loss;
+        document.getElementById('total-loss').textContent = yieldLoss.total_loss_percentage.toFixed(1) + '%';
+
+        // Update comparison bar
+        const salvageablePercent = 100 - yieldLoss.total_loss_percentage;
+        document.getElementById('salvageable-bar').style.width = salvageablePercent + '%';
+        document.getElementById('lost-bar').style.width = yieldLoss.total_loss_percentage + '%';
+
+        // Update yields
+        document.getElementById('salvageable-yield').textContent = yieldLoss.salvageable_yield_tonnes.toFixed(2) + ' tonnes';
+        document.getElementById('lost-yield').textContent = yieldLoss.lost_yield_tonnes.toFixed(2) + ' tonnes';
+
+        // Update economic impact
+        const economic = diseaseImpact.economic_impact;
+        document.getElementById('expected-revenue').textContent = '₹ ' + formatNumber(economic.expected_revenue_inr);
+        document.getElementById('treatment-cost').textContent = '₹ ' + formatNumber(economic.treatment_cost_inr);
+        document.getElementById('net-revenue').textContent = '₹ ' + formatNumber(economic.net_revenue_after_treatment);
+
+        // Show the yield impact section
+        document.getElementById('yield-impact-section').style.display = 'block';
+    }
+
+    function formatNumber(num) {
+        if (num >= 100000) {
+            return (num / 100000).toFixed(2) + ' Lakhs';
+        } else if (num >= 10000) {
+            return (num / 1000).toFixed(0) + 'K';
+        }
+        return num.toFixed(0);
+    }
+</script>
+{% endblock %}

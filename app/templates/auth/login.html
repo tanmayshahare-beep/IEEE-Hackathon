@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Login - AgroDoc-AI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 data-translate="welcome_back">🌾 Welcome Back</h2>
+        <p data-translate="login_desc">Login to access your dashboard</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="auth-message auth-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Method Toggle -->
+        <div class="login-method-toggle">
+            <button type="button" class="toggle-btn active" id="password-toggle" onclick="showPasswordLogin()">
+                <span data-translate="password_login">🔑 Password</span>
+            </button>
+            <button type="button" class="toggle-btn" id="otp-toggle" onclick="showOTPLogin()">
+                <span data-translate="otp_login">📧 OTP Code</span>
+            </button>
+        </div>
+
+        <!-- Password Login Form -->
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" id="password-login-form">
+            <div class="form-group">
+                <label for="password-username" data-translate="username_label">Username</label>
+                <input type="text" class="form-input" id="password-username" name="username" required
+                       data-translate-placeholder="username_placeholder"
+                       placeholder="Enter your username"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <div class="form-group">
+                <label for="password" data-translate="password_label">Password</label>
+                <input type="password" class="form-input" id="password" name="password" required
+                       data-translate-placeholder="password_placeholder"
+                       placeholder="Enter your password"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="password-login-btn" data-translate="login_btn">
+                Login with Password
+            </button>
+        </form>
+
+        <!-- OTP Login Form -->
+        <form method="POST" action="{{ url_for('auth.request_otp_login') }}" class="auth-form" id="otp-login-form" style="display: none;">
+            <div class="form-group">
+                <label for="otp-email" data-translate="email_label">Email Address</label>
+                <input type="email" class="form-input" id="otp-email" name="email" required
+                       data-translate-placeholder="email_placeholder"
+                       placeholder="Enter your registered email"
+                       onfocus="this.style.borderColor='#eab308'"
+                       onblur="this.style.borderColor='rgba(234,179,8,0.2)'">
+            </div>
+
+            <p class="otp-info" data-translate="otp_info">
+                📬 We'll send a 6-digit verification code to your email
+            </p>
+
+            <button type="submit" class="btn btn-primary btn-block" id="otp-request-btn" data-translate="send_otp_btn">
+                📤 Send OTP Code
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <span data-translate="no_account">Don't have an account?</span> <a href="{{ url_for('auth.register') }}" data-translate="register_link">Register here</a>
+        </p>
+    </div>
+</div>
+
+<style>
+.login-method-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 5px;
+    border-radius: 10px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: transparent;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 8px;
+    color: #9ca3af;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+    background: rgba(234, 179, 8, 0.1);
+    color: #fbbf24;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, #eab308, #facc15);
+    border-color: #eab308;
+    color: #1c1917;
+}
+
+.otp-info {
+    background: rgba(234, 179, 8, 0.1);
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    color: #fbbf24;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.auth-message {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.auth-success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+}
+
+.auth-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.auth-info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #3b82f6;
+}
+</style>
+
+<script>
+function showPasswordLogin() {
+    document.getElementById('password-login-form').style.display = 'block';
+    document.getElementById('otp-login-form').style.display = 'none';
+    document.getElementById('password-toggle').classList.add('active');
+    document.getElementById('otp-toggle').classList.remove('active');
+}
+
+function showOTPLogin() {
+    document.getElementById('password-login-form').style.display = 'none';
+    document.getElementById('otp-login-form').style.display = 'block';
+    document.getElementById('password-toggle').classList.remove('active');
+    document.getElementById('otp-toggle').classList.add('active');
+}
+
+// Add loading state handling
+const passwordForm = document.getElementById('password-login-form');
+const passwordBtn = document.getElementById('password-login-btn');
+const otpForm = document.getElementById('otp-login-form');
+const otpBtn = document.getElementById('otp-request-btn');
+
+passwordForm.addEventListener('submit', function() {
+    passwordBtn.disabled = true;
+    const originalText = passwordBtn.getAttribute('data-translate');
+    passwordBtn.textContent = '⏳ Logging in...';
+});
+
+otpForm.addEventListener('submit', function() {
+    otpBtn.disabled = true;
+    otpBtn.textContent = '⏳ Sending OTP...';
+});
+</script>
+{% endblock %}
