@@ -1,24 +1,24 @@
-# 🌾 AgroDoc-AI - AI-Powered Plant Disease Detection System
+#  AgroDoc-AI - AI-Powered Plant Disease Detection System
 
 A comprehensive full-stack web application for plant disease detection using deep learning and AI-powered expert insights.
 
 ![Training Curves](training_curves.png)
 ![Confusion Matrix](models/plots/confusion_matrix.png)
 
----
 
-## 🎯 Key Features
+
+##  Key Features
 
 ### Core Functionality
-- ✅ **User Authentication** - Register/login with bcrypt password hashing
-- ✅ **OTP Verification** - Email-based OTP for registration and login
-- ✅ **Image Upload** - Drag-and-drop with camera capture support
-- ✅ **Blur Detection** - Automatic image quality check using Laplacian variance
-- ✅ **CNN Prediction** - Deep learning model for disease classification (18 classes)
-- ✅ **Non-Leaf Rejection** - Automatically rejects invalid images (<50% confidence)
-- ✅ **AI Expert Insights** - Ollama Phi-3 integration for Q&A about detected diseases
-- ✅ **Prediction History** - Full history of user's uploads and predictions
-- ✅ **Farm Boundaries** - GeoJSON/KML upload for farm location tracking
+-  **User Authentication** - Register/login with bcrypt password hashing
+-  **OTP Verification** - Email-based OTP for registration and login
+-  **Image Upload** - Drag-and-drop with camera capture support
+-  **Blur Detection** - Automatic image quality check using Laplacian variance
+-  **CNN Prediction** - Deep learning model for disease classification (18 classes)
+-  **Non-Leaf Rejection** - Automatically rejects invalid images (<50% confidence)
+-  **AI Expert Insights** - Ollama Phi-3 integration for Q&A about detected diseases
+-  **Prediction History** - Full history of user's uploads and predictions
+-  **Farm Boundaries** - GeoJSON/KML upload for farm location tracking
 
 ### Supported Plant Diseases (18 Classes)
 | Plant | Diseases |
@@ -27,9 +27,9 @@ A comprehensive full-stack web application for plant disease detection using dee
 | **Grape** | Black rot, Esca (Black Measles), Leaf blight, Healthy |
 | **Tomato** | Bacterial spot, Early blight, Late blight, Leaf mold, Septoria leaf spot, Spider mites, Target spot, Yellow leaf curl virus, Mosaic virus, Healthy |
 
----
 
-## 🚀 Quick Start
+
+##  Quick Start
 
 ### 1. Install Dependencies
 
@@ -69,9 +69,9 @@ python run.py
 
 Access at: **http://localhost:5000**
 
----
 
-## 🧪 Test Credentials
+
+##  Test Credentials
 
 **Default Test User:**
 - Username: `testuser`
@@ -79,13 +79,13 @@ Access at: **http://localhost:5000**
 
 **Or register a new account with email verification!**
 
----
 
-## 📁 Project Structure
+
+##  Project Structure
 
 ```
 VILLAGECROP/
-├── 📂 app/                          # Flask Web Application
+├──  app/                          # Flask Web Application
 │   ├── __init__.py                  # Flask app factory
 │   ├── config.py                    # Configuration & disease recommendations
 │   ├── routes/
@@ -108,12 +108,12 @@ VILLAGECROP/
 │   └── static/
 │       └── css/
 │           └── agri-ai-replica.css  # Premium dark theme
-├── 📂 models/                        # ML Models & Metrics
+├──  models/                        # ML Models & Metrics
 │   ├── best_model.pth               # Trained EfficientNet-B0
 │   ├── class_mapping.json           # Class index mapping
 │   ├── performance_metrics.json     # Model evaluation metrics
 │   └── plots/                       # Visualization plots
-├── 📂 scripts/                       # Utility Scripts
+├──  scripts/                       # Utility Scripts
 │   └── init_db.py                   # Database initialization
 ├── 📄 run.py                         # Main application entry point
 ├── 📄 start.bat                      # Windows launcher
@@ -122,9 +122,9 @@ VILLAGECROP/
 └── 📄 README.md                      # This file
 ```
 
----
 
-## 📊 Model Performance
+
+##  Model Performance
 
 ### Transfer Learning Results
 - **Model:** EfficientNet-B0 (frozen backbone)
@@ -144,7 +144,7 @@ VILLAGECROP/
 
 See `models/performance_metrics.json` for detailed metrics.
 
----
+
 
 ## 🔧 Configuration
 
@@ -184,9 +184,9 @@ MAIL_DEFAULT_SENDER=your-email@gmail.com
 
 See `OLLAMA_SETUP_PHI3.md` for detailed setup.
 
----
 
-## 📚 Documentation
+
+##  Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -201,9 +201,9 @@ See `OLLAMA_SETUP_PHI3.md` for detailed setup.
 | `GMAIL_OTP_SETUP.md` | Gmail OTP email setup |
 | `OLLAMA_SETUP_PHI3.md` | Ollama Phi-3 configuration |
 
----
 
-## 🛠️ Development
+
+##  Development
 
 ### Run Training Script
 
@@ -231,18 +231,18 @@ python predict_with_tta.py path/to/image.jpg
 
 ---
 
-## 🔒 Security Features
+##  Security Features
 
-- ✅ **Password Hashing** - bcrypt with salt
-- ✅ **OTP Verification** - Email-based 2FA for registration/login
-- ✅ **Session Management** - Secure Flask sessions
-- ✅ **Input Validation** - Server-side validation for all inputs
-- ✅ **Non-Leaf Rejection** - Confidence threshold (50%) to reject invalid images
-- ✅ **Rate Limiting** - OTP resend cooldown (60s), max attempts (5)
+-  **Password Hashing** - bcrypt with salt
+-  **OTP Verification** - Email-based 2FA for registration/login
+-  **Session Management** - Secure Flask sessions
+-  **Input Validation** - Server-side validation for all inputs
+-  **Non-Leaf Rejection** - Confidence threshold (50%) to reject invalid images
+-  **Rate Limiting** - OTP resend cooldown (60s), max attempts (5)
 
----
 
-## 📈 MongoDB Schema
+
+##  MongoDB Schema
 
 ### users Collection
 ```javascript
@@ -273,26 +273,10 @@ python predict_with_tta.py path/to/image.jpg
 }
 ```
 
----
 
-## 🎨 Frontend Features
 
-### Premium Dark Theme
-- Modern gradient design with gold accents (#eab308)
-- Responsive layout for mobile/desktop
-- Smooth animations and transitions
-- Accessible color contrast
 
-### Interactive Components
-- Drag-and-drop image upload
-- Real-time confidence animation
-- AI chatbot with typing indicators
-- OTP verification with auto-submit
-- Farm boundary mapping (Leaflet.js)
-
----
-
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### MongoDB Connection Error
 ```bash
@@ -321,32 +305,24 @@ Ensure `best_model.pth` exists in `models/` folder. If not, run training:
 python transfer_learning_apple_grape_tomato.py
 ```
 
----
 
-## 📞 Support
+
+##  Support
 
 For issues or questions:
 1. Check documentation in `/docs` folder
 2. Review troubleshooting section above
 3. Check Flask console for error messages
 
----
 
-## 📄 License
 
-This project is for educational and research purposes.
 
----
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **PlantVillage Dataset** - Open access dataset for plant disease detection
 - **Ollama** - Local LLM runtime for Phi-3 model
 - **EfficientNet** - Pre-trained CNN architecture
 - **Flask** - Lightweight Python web framework
 
----
 
-**Built with ❤️ for smarter farming**
-
-*AgroDoc-AI - AI-Powered Plant Disease Detection*
