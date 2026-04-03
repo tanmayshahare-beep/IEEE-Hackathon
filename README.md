@@ -3,7 +3,7 @@
 A comprehensive full-stack web application for plant disease detection using deep learning and AI-powered expert insights.
 
 ![Training Curves](training_curves.png)
-![Confusion Matrix](models/plots/confusion_matrix.png)
+![Confusion Matrix](confusion_matrix.png)
 
 
 
